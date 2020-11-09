@@ -1,1 +1,2 @@
-pub mod ntstring;
+mod ntstring;
+pub use ntstring::NTString;

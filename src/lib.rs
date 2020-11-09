@@ -25,7 +25,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::Context;
-    use basic_type::character::Character;
+    use basic_type::Character;
 
     #[test]
     fn test_character() -> SimpleResult<()> {

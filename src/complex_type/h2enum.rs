@@ -85,7 +85,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::basic_type::h2number::H2Number;
+    use crate::basic_type::H2Number;
 
     #[test]
     fn test_enum() -> SimpleResult<()> {
