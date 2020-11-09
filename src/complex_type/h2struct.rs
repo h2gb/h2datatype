@@ -60,6 +60,7 @@ impl H2TypeTrait for H2Struct {
                 aligned_range: field_type.aligned_range(this_offset)?,
                 field_name: Some(name.clone()),
                 field_type: field_type.clone(),
+                value: field_type.to_string(this_offset)?,
             };
 
             start = resolved.aligned_range.end;
@@ -71,7 +72,7 @@ impl H2TypeTrait for H2Struct {
     // Get the user-facing name of the type
     fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
         let elements = self.resolve_partial(offset)?.iter().map(|t| {
-            Ok(format!("{}: {}", t.field_name.clone().unwrap_or("(unnamed)".to_string()), t.to_string(offset)?))
+            Ok(format!("{}: {}", t.field_name.clone().unwrap_or("(unnamed)".to_string()), t.to_string()))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(elements.join(", "))
@@ -132,16 +133,16 @@ mod tests {
 
         assert_eq!(4, resolved.len());
         assert_eq!(0..4, resolved[0].actual_range);
-        assert_eq!("0x00010203", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x00010203", resolved[0].to_string());
 
         assert_eq!(4..6, resolved[1].actual_range);
-        assert_eq!("0x0001", resolved[1].to_string(d_offset)?);
+        assert_eq!("0x0001", resolved[1].to_string());
 
         assert_eq!(6..7, resolved[2].actual_range);
-        assert_eq!("0o17", resolved[2].to_string(d_offset)?);
+        assert_eq!("0o17", resolved[2].to_string());
 
         assert_eq!(7..11, resolved[3].actual_range);
-        assert_eq!("202182159", resolved[3].to_string(d_offset)?);
+        assert_eq!("202182159", resolved[3].to_string());
 
         Ok(())
     }
@@ -186,23 +187,23 @@ mod tests {
         assert_eq!(5, resolved.len());
 
         assert_eq!(0..4,         resolved[0].actual_range);
-        assert_eq!("0x00010203", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x00010203", resolved[0].to_string());
         //assert_eq!(vec!["field_u32".to_string()], resolved[0].field_name.unwrap());
 
         assert_eq!(4..5,     resolved[1].actual_range);
-        assert_eq!("0x41",   resolved[1].to_string(d_offset)?);
+        assert_eq!("0x41",   resolved[1].to_string());
         // assert_eq!(Some(vec!["struct".to_string(), "A".to_string()]), resolved[1].breadcrumbs);
 
         assert_eq!(5..6,     resolved[2].actual_range);
-        assert_eq!("0x42",   resolved[2].to_string(d_offset)?);
+        assert_eq!("0x42",   resolved[2].to_string());
         // assert_eq!(Some(vec!["struct".to_string(), "B".to_string()]), resolved[2].breadcrumbs);
 
         assert_eq!(6..8,     resolved[3].actual_range);
-        assert_eq!("0x4343", resolved[3].to_string(d_offset)?);
+        assert_eq!("0x4343", resolved[3].to_string());
         // assert_eq!(Some(vec!["struct".to_string(), "C".to_string()]), resolved[3].breadcrumbs);
 
         assert_eq!(8..12,    resolved[4].actual_range);
-        assert_eq!("1",      resolved[4].to_string(d_offset)?);
+        assert_eq!("1",      resolved[4].to_string());
         // assert_eq!(Some(vec!["field_u32_little".to_string()]), resolved[4].breadcrumbs);
 
         Ok(())
@@ -305,39 +306,39 @@ mod tests {
 
         let resolved = t.resolve_full(d_offset)?;
 
-        assert_eq!("0x01", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x01", resolved[0].to_string());
         assert_eq!(1..2,   resolved[0].actual_range);
         assert_eq!(1..4,   resolved[0].aligned_range);
 
-        assert_eq!("0x02", resolved[1].to_string(d_offset)?);
+        assert_eq!("0x02", resolved[1].to_string());
         assert_eq!(4..5,   resolved[1].actual_range);
         assert_eq!(4..8,   resolved[1].aligned_range);
 
-        assert_eq!("0x5a", resolved[2].to_string(d_offset)?);
+        assert_eq!("0x5a", resolved[2].to_string());
         assert_eq!(8..9,   resolved[2].actual_range);
         assert_eq!(8..9,   resolved[2].aligned_range);
 
-        assert_eq!("0x5a", resolved[3].to_string(d_offset)?);
+        assert_eq!("0x5a", resolved[3].to_string());
         assert_eq!(9..10,  resolved[3].actual_range);
         assert_eq!(9..10,  resolved[3].aligned_range);
 
-        assert_eq!("0x5a", resolved[4].to_string(d_offset)?);
+        assert_eq!("0x5a", resolved[4].to_string());
         assert_eq!(10..11, resolved[4].actual_range);
         assert_eq!(10..11, resolved[4].aligned_range);
 
-        assert_eq!("0x4141", resolved[5].to_string(d_offset)?);
+        assert_eq!("0x4141", resolved[5].to_string());
         assert_eq!(11..13,   resolved[5].actual_range);
         assert_eq!(11..16,   resolved[5].aligned_range);
 
-        assert_eq!("0x05060708", resolved[6].to_string(d_offset)?);
+        assert_eq!("0x05060708", resolved[6].to_string());
         assert_eq!(16..20,       resolved[6].actual_range);
         assert_eq!(16..24,       resolved[6].aligned_range);
 
-        assert_eq!("0x090a0b0c", resolved[7].to_string(d_offset)?);
+        assert_eq!("0x090a0b0c", resolved[7].to_string());
         assert_eq!(24..28,       resolved[7].actual_range);
         assert_eq!(24..32,       resolved[7].aligned_range);
 
-        assert_eq!("0x0d", resolved[8].to_string(d_offset)?);
+        assert_eq!("0x0d", resolved[8].to_string());
         assert_eq!(32..33, resolved[8].actual_range);
         assert_eq!(32..33, resolved[8].aligned_range);
 

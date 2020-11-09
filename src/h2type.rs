@@ -102,6 +102,7 @@ impl H2Type {
                 aligned_range: self.aligned_range(offset)?,
                 field_name: None,
                 field_type: self.clone(),
+                value: self.to_string(offset)?,
             });
         } else {
             // Children? Gotta get 'em all!

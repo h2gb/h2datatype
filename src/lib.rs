@@ -48,22 +48,22 @@ mod tests {
         let resolved = t.resolve_full(s_offset)?;
         assert_eq!(1, resolved.len());
         assert_eq!(0..1, resolved[0].actual_range);
-        assert_eq!("Character", resolved[0].to_string(s_offset)?);
+        assert_eq!("Character", resolved[0].to_string());
 
         let resolved = t.resolve_full(s_offset.at(1))?;
         assert_eq!(1, resolved.len());
         assert_eq!(1..2, resolved[0].actual_range);
-        assert_eq!("Character", resolved[0].to_string(s_offset)?);
+        assert_eq!("Character", resolved[0].to_string());
 
         let resolved = t.resolve_full(d_offset)?;
         assert_eq!(1, resolved.len());
         assert_eq!(0..1, resolved[0].actual_range);
-        assert_eq!("A", resolved[0].to_string(d_offset)?);
+        assert_eq!("A", resolved[0].to_string());
 
         let resolved = t.resolve_full(d_offset.at(1))?;
         assert_eq!(1, resolved.len());
         assert_eq!(1..2, resolved[0].actual_range);
-        assert_eq!("B", resolved[0].to_string(d_offset)?);
+        assert_eq!("B", resolved[0].to_string());
 
         Ok(())
     }

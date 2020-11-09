@@ -53,6 +53,7 @@ impl H2TypeTrait for H2Array {
                 aligned_range: self.field_type.aligned_range(this_offset)?,
                 field_name: Some(i.to_string()),
                 field_type: (*self.field_type).clone(),
+                value: self.field_type.to_string(this_offset)?,
             });
 
             // I'm not sure if this is a good idea, but...
@@ -110,16 +111,16 @@ mod tests {
         assert_eq!(4, resolved.len());
 
         assert_eq!(0..4, resolved[0].actual_range);
-        assert_eq!("0x41414141", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x41414141", resolved[0].to_string());
 
         assert_eq!(4..8, resolved[1].actual_range);
-        assert_eq!("0x42424242", resolved[1].to_string(d_offset)?);
+        assert_eq!("0x42424242", resolved[1].to_string());
 
         assert_eq!(8..12, resolved[2].actual_range);
-        assert_eq!("0x43434343", resolved[2].to_string(d_offset)?);
+        assert_eq!("0x43434343", resolved[2].to_string());
 
         assert_eq!(12..16, resolved[3].actual_range);
-        assert_eq!("0x44444444", resolved[3].to_string(d_offset)?);
+        assert_eq!("0x44444444", resolved[3].to_string());
 
         Ok(())
     }
@@ -148,20 +149,20 @@ mod tests {
         let resolved = t.resolve_full(d_offset)?;
         assert_eq!(12, resolved.len());
 
-        assert_eq!("0",    resolved[0].to_string(d_offset)?);
-        assert_eq!("0",    resolved[1].to_string(d_offset)?);
-        assert_eq!("0",    resolved[2].to_string(d_offset)?);
-        assert_eq!("0",    resolved[3].to_string(d_offset)?);
+        assert_eq!("0",    resolved[0].to_string());
+        assert_eq!("0",    resolved[1].to_string());
+        assert_eq!("0",    resolved[2].to_string());
+        assert_eq!("0",    resolved[3].to_string());
 
-        assert_eq!("127",  resolved[4].to_string(d_offset)?);
-        assert_eq!("127",  resolved[5].to_string(d_offset)?);
-        assert_eq!("127",  resolved[6].to_string(d_offset)?);
-        assert_eq!("127",  resolved[7].to_string(d_offset)?);
+        assert_eq!("127",  resolved[4].to_string());
+        assert_eq!("127",  resolved[5].to_string());
+        assert_eq!("127",  resolved[6].to_string());
+        assert_eq!("127",  resolved[7].to_string());
 
-        assert_eq!("-128", resolved[8].to_string(d_offset)?);
-        assert_eq!("-128", resolved[9].to_string(d_offset)?);
-        assert_eq!("-1",  resolved[10].to_string(d_offset)?);
-        assert_eq!("-1",  resolved[11].to_string(d_offset)?);
+        assert_eq!("-128", resolved[8].to_string());
+        assert_eq!("-128", resolved[9].to_string());
+        assert_eq!("-1",  resolved[10].to_string());
+        assert_eq!("-1",  resolved[11].to_string());
 
         Ok(())
     }
@@ -185,22 +186,22 @@ mod tests {
         let children = t.resolve_partial(d_offset)?;
         assert_eq!(4, children.len());
         assert_eq!(0..1, children[0].actual_range);
-        assert_eq!("0x41", children[0].to_string(d_offset)?);
+        assert_eq!("0x41", children[0].to_string());
 
         let resolved = t.resolve_full(d_offset)?;
         assert_eq!(4, resolved.len());
 
         assert_eq!(0..1,   resolved[0].actual_range);
-        assert_eq!("0x41", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x41", resolved[0].to_string());
 
         assert_eq!(4..5,   resolved[1].actual_range);
-        assert_eq!("0x42", resolved[1].to_string(d_offset)?);
+        assert_eq!("0x42", resolved[1].to_string());
 
         assert_eq!(8..9,   resolved[2].actual_range);
-        assert_eq!("0x43", resolved[2].to_string(d_offset)?);
+        assert_eq!("0x43", resolved[2].to_string());
 
         assert_eq!(12..13, resolved[3].actual_range);
-        assert_eq!("0x44", resolved[3].to_string(d_offset)?);
+        assert_eq!("0x44", resolved[3].to_string());
 
         Ok(())
     }
@@ -232,16 +233,16 @@ mod tests {
         assert_eq!(8, resolved.len());
 
         assert_eq!(0..1,   resolved[0].actual_range);
-        assert_eq!("0x41", resolved[0].to_string(d_offset)?);
+        assert_eq!("0x41", resolved[0].to_string());
 
         assert_eq!(2..3,   resolved[1].actual_range);
-        assert_eq!("0x42", resolved[1].to_string(d_offset)?);
+        assert_eq!("0x42", resolved[1].to_string());
 
         assert_eq!(4..5,   resolved[2].actual_range);
-        assert_eq!("0x43", resolved[2].to_string(d_offset)?);
+        assert_eq!("0x43", resolved[2].to_string());
 
         assert_eq!(6..7,   resolved[3].actual_range);
-        assert_eq!("0x44", resolved[3].to_string(d_offset)?);
+        assert_eq!("0x44", resolved[3].to_string());
 
         Ok(())
     }
@@ -264,19 +265,19 @@ mod tests {
 
         assert_eq!(1..2, resolved[0].actual_range);
         assert_eq!(1..4, resolved[0].aligned_range);
-        assert_eq!("A", resolved[0].to_string(d_offset)?);
+        assert_eq!("A", resolved[0].to_string());
 
         assert_eq!(5..6, resolved[1].actual_range);
         assert_eq!(5..8, resolved[1].aligned_range);
-        assert_eq!("B", resolved[1].to_string(d_offset)?);
+        assert_eq!("B", resolved[1].to_string());
 
         assert_eq!(9..10, resolved[2].actual_range);
         assert_eq!(9..12, resolved[2].aligned_range);
-        assert_eq!("C", resolved[2].to_string(d_offset)?);
+        assert_eq!("C", resolved[2].to_string());
 
         assert_eq!(13..14, resolved[3].actual_range);
         assert_eq!(13..16, resolved[3].aligned_range);
-        assert_eq!("D", resolved[3].to_string(d_offset)?);
+        assert_eq!("D", resolved[3].to_string());
 
         Ok(())
     }
