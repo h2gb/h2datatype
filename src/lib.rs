@@ -4,8 +4,8 @@ pub use alignment::Alignment;
 mod resolved_type;
 pub use resolved_type::ResolvedType;
 
-mod resolve_offset;
-pub use resolve_offset::ResolveOffset;
+mod offset;
+pub use offset::Offset;
 
 mod h2types;
 pub use h2types::H2Types;
@@ -31,8 +31,8 @@ mod tests {
     fn test_character() -> SimpleResult<()> {
         let t = Character::new();
         let data = b"ABCD".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         assert_eq!(1, t.actual_size(s_offset)?);
         assert_eq!(1, t.actual_size(d_offset)?);

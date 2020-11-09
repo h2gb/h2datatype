@@ -6,7 +6,7 @@ use serde::{Serialize, Deserialize};
 
 use sized_number::Endian;
 
-use crate::{H2Type, H2Types, H2TypeTrait, ResolveOffset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
@@ -32,15 +32,15 @@ impl H2TypeTrait for Unicode {
         true
     }
 
-    fn size(&self, _offset: ResolveOffset) -> SimpleResult<u64> {
+    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
         // TODO: Maybe I should do this "right"?
         Ok(2)
     }
 
-    fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
-            ResolveOffset::Static(_) => Ok("2-byte Unicode Character".to_string()),
-            ResolveOffset::Dynamic(context) => {
+            Offset::Static(_) => Ok("2-byte Unicode Character".to_string()),
+            Offset::Dynamic(context) => {
                 let number = context.read_u16(self.endian)?;
 
                 match char::decode_utf16(vec![number]).next() {
@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn test_unicode_big_endian() -> SimpleResult<()> {
         let data = b"\x00\x41\x03\xce\xd8\x34".to_vec();
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         assert_eq!("A", Unicode::new(Endian::Big).to_string(d_offset.at(0))?);
         assert_eq!("ώ", Unicode::new(Endian::Big).to_string(d_offset.at(2))?);
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn test_unicode_little_endian() -> SimpleResult<()> {
         let data = b"\x41\x00\xce\x03\x34\xd8".to_vec();
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         assert_eq!("A", Unicode::new(Endian::Little).to_string(d_offset.at(0))?);
         assert_eq!("ώ", Unicode::new(Endian::Little).to_string(d_offset.at(2))?);

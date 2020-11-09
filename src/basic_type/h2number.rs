@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 
 use sized_number::{SizedDefinition, SizedDisplay};
 
-use crate::{H2Type, H2Types, H2TypeTrait, ResolveOffset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
@@ -33,14 +33,14 @@ impl H2TypeTrait for H2Number {
         true
     }
 
-    fn size(&self, _offset: ResolveOffset) -> SimpleResult<u64> {
+    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(self.definition.size())
     }
 
-    fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
-            ResolveOffset::Static(_) => Ok("Number".to_string()),
-            ResolveOffset::Dynamic(context) => {
+            Offset::Static(_) => Ok("Number".to_string()),
+            Offset::Dynamic(context) => {
                 self.definition.to_string(context, self.display)
             }
         }
@@ -57,8 +57,8 @@ mod tests {
     #[test]
     fn test_u8_hex() -> SimpleResult<()> {
         let data = b"\x00\x7f\x80\xff".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Number::new(
             SizedDefinition::U8,
@@ -82,8 +82,8 @@ mod tests {
     #[test]
     fn test_i16_decimal() -> SimpleResult<()> {
         let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Number::new(
             SizedDefinition::I16(Endian::Big),
@@ -107,8 +107,8 @@ mod tests {
     #[test]
     fn test_number_alignment() -> SimpleResult<()> {
         let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Number::new_aligned(
             Alignment::Loose(8),

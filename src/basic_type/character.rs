@@ -3,7 +3,7 @@ use simple_error::SimpleResult;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, H2TypeTrait, ResolveOffset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
@@ -27,14 +27,14 @@ impl H2TypeTrait for Character {
         true
     }
 
-    fn size(&self, _offset: ResolveOffset) -> SimpleResult<u64> {
+    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(1)
     }
 
-    fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
-            ResolveOffset::Static(_) => Ok("Character".to_string()),
-            ResolveOffset::Dynamic(context) => {
+            Offset::Static(_) => Ok("Character".to_string()),
+            Offset::Dynamic(context) => {
                 let number = context.read_u8()?;
 
                 match number > 0x1F && number < 0x7F {
@@ -55,7 +55,7 @@ mod tests {
     #[test]
     fn test_character() -> SimpleResult<()> {
         let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
-        let offset = ResolveOffset::Dynamic(Context::new(&data));
+        let offset = Offset::Dynamic(Context::new(&data));
 
         assert_eq!("<invalid>", Character::new().to_string(offset.at(0))?);
         assert_eq!("<invalid>", Character::new().to_string(offset.at(1))?);

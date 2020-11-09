@@ -4,7 +4,7 @@ use std::ops::Range;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{Alignment, H2Types, H2TypeTrait, ResolveOffset, ResolvedType};
+use crate::{Alignment, H2Types, H2TypeTrait, Offset, ResolvedType};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
@@ -46,12 +46,12 @@ impl H2Type {
     }
 
     /// Size of just the field - no padding
-    pub fn actual_size(&self, offset: ResolveOffset) -> SimpleResult<u64> {
+    pub fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         self.field_type().size(offset)
     }
 
     /// Range of values this covers, with alignment padding built-in
-    pub fn actual_range(&self, offset: ResolveOffset) -> SimpleResult<Range<u64>> {
+    pub fn actual_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
         // Get the start and end
         let start = offset.position();
         let end   = offset.position() + self.actual_size(offset)?;
@@ -61,7 +61,7 @@ impl H2Type {
     }
 
     /// Range of values this covers, with alignment padding built-in
-    pub fn aligned_range(&self, offset: ResolveOffset) -> SimpleResult<Range<u64>> {
+    pub fn aligned_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
         // Get the start and end
         let start = offset.position();
         let end   = offset.position() + self.actual_size(offset)?;
@@ -71,27 +71,27 @@ impl H2Type {
     }
 
     /// Size including padding either before or after
-    pub fn aligned_size(&self, offset: ResolveOffset) -> SimpleResult<u64> {
+    pub fn aligned_size(&self, offset: Offset) -> SimpleResult<u64> {
         let range = self.aligned_range(offset)?;
 
         Ok(range.end - range.start)
     }
 
-    pub fn resolve_partial(&self, offset: ResolveOffset) -> SimpleResult<Vec<ResolvedType>> {
+    pub fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
         self.field_type().resolve_partial(offset)
     }
 
     // Render as a string
-    pub fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         self.field_type().to_string(offset)
     }
 
     // Get "related" nodes - ie, what a pointer points to
-    pub fn related(&self, offset: ResolveOffset) -> SimpleResult<Vec<(u64, H2Type)>> {
+    pub fn related(&self, offset: Offset) -> SimpleResult<Vec<(u64, H2Type)>> {
         self.field_type().related(offset)
     }
 
-    pub fn resolve_full(&self, offset: ResolveOffset) -> SimpleResult<Vec<ResolvedType>> {
+    pub fn resolve_full(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
         let children = self.resolve_partial(offset)?;
         let mut result: Vec<ResolvedType> = Vec::new();
 

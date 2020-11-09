@@ -3,7 +3,7 @@ use simple_error::{bail, SimpleResult};
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, ResolvedType, H2TypeTrait, ResolveOffset};
+use crate::{H2Type, H2Types, ResolvedType, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
@@ -32,7 +32,7 @@ impl H2TypeTrait for H2Array {
         self.field_type.is_static()
     }
 
-    fn size(&self, offset: ResolveOffset) -> SimpleResult<u64> {
+    fn size(&self, offset: Offset) -> SimpleResult<u64> {
         match self.is_static() {
             // TODO: Alignment might make this weird
             true => Ok(self.length * self.field_type.aligned_size(offset)?),
@@ -40,7 +40,7 @@ impl H2TypeTrait for H2Array {
         }
     }
 
-    fn resolve_partial(&self, offset: ResolveOffset) -> SimpleResult<Vec<ResolvedType>> {
+    fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
         let mut result = vec![];
         let mut start: u64 = offset.position();
 
@@ -71,7 +71,7 @@ impl H2TypeTrait for H2Array {
         Ok(result)
     }
 
-    fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Because the collect() expects a result, this will end and bubble
         // up errors automatically!
         let strings: Vec<String> = self.resolve_partial(offset)?.iter().map(|c| {
@@ -93,8 +93,8 @@ mod tests {
     #[test]
     fn test_array() -> SimpleResult<()> {
         let data = b"AAAABBBBCCCCDDDD".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,
@@ -128,8 +128,8 @@ mod tests {
     #[test]
     fn test_nested_array() -> SimpleResult<()> {
         let data = b"\x00\x00\x00\x00\x7f\x7f\x7f\x7f\x80\x80\xff\xff".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         // An array of 4 4-element I8 arrays that will print as decimal
         let t = H2Array::new(4,
@@ -170,8 +170,8 @@ mod tests {
     #[test]
     fn test_alignment() -> SimpleResult<()> {
         let data = b"AAAABBBBCCCCDDDD".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,
@@ -209,8 +209,8 @@ mod tests {
     #[test]
     fn test_nested_alignment() -> SimpleResult<()> {
         let data = b"AABBCCDDEEFFGGHH".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         // An array of 4 elements
         let t = H2Array::new(4,
@@ -251,7 +251,7 @@ mod tests {
     fn test_offset_padding() -> SimpleResult<()> {
         // The - characters will be in the padding
         let data = b"-A---B---C---D--".to_vec();
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,

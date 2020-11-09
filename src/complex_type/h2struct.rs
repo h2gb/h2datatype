@@ -3,7 +3,7 @@ use simple_error::{bail, SimpleResult};
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, ResolvedType, H2TypeTrait, ResolveOffset};
+use crate::{H2Type, H2Types, ResolvedType, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
@@ -35,7 +35,7 @@ impl H2TypeTrait for H2Struct {
         ).is_some()
     }
 
-    fn size(&self, offset: ResolveOffset) -> SimpleResult<u64> {
+    fn size(&self, offset: Offset) -> SimpleResult<u64> {
         let resolved = self.resolve_partial(offset)?;
 
         if let Some(first) = resolved.first() {
@@ -49,7 +49,7 @@ impl H2TypeTrait for H2Struct {
         }
     }
 
-    fn resolve_partial(&self, offset: ResolveOffset) -> SimpleResult<Vec<ResolvedType>> {
+    fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
         let mut start = offset.position();
 
         self.fields.iter().map(|(name, field_type)| {
@@ -70,7 +70,7 @@ impl H2TypeTrait for H2Struct {
     }
 
     // Get the user-facing name of the type
-    fn to_string(&self, offset: ResolveOffset) -> SimpleResult<String> {
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         let elements = self.resolve_partial(offset)?.iter().map(|t| {
             Ok(format!("{}: {}", t.field_name.clone().unwrap_or("(unnamed)".to_string()), t.to_string()))
         }).collect::<SimpleResult<Vec<String>>>()?;
@@ -92,8 +92,8 @@ mod tests {
     fn test_struct() -> SimpleResult<()> {
         //           ----- hex ------ --hex-- -o- ----decimal----
         let data = b"\x00\x01\x02\x03\x00\x01\x0f\x0f\x0e\x0d\x0c".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Struct::new(vec![
             (
@@ -152,8 +152,8 @@ mod tests {
         //           ----- hex ------  ----struct----
         //                            -A- -B- ---C---
         let data = b"\x00\x01\x02\x03\x41\x42\x43\x43\x01\x00\x00\x00".to_vec();
-        let s_offset = ResolveOffset::Static(0);
-        let d_offset = ResolveOffset::Dynamic(Context::new(&data));
+        let s_offset = Offset::Static(0);
+        let d_offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Struct::new(vec![
             (
@@ -227,7 +227,7 @@ mod tests {
                      \x0dPPP".to_vec();
 
         // Note: starting at offset 1 (so we can test the full alignment)
-        let d_offset = ResolveOffset::Dynamic(Context::new_at(&data, 1));
+        let d_offset = Offset::Dynamic(Context::new_at(&data, 1));
 
         let t = H2Struct::new_aligned(Alignment::Loose(4), vec![
             (
