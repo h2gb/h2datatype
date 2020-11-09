@@ -105,28 +105,38 @@ mod tests {
     }
 
     #[test]
-    fn test_alignment() -> SimpleResult<()> {
+    fn test_number_alignment() -> SimpleResult<()> {
         let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
         let s_offset = ResolveOffset::Static(0);
         let d_offset = ResolveOffset::Dynamic(Context::new(&data));
 
         let t = H2Number::new_aligned(
-            Alignment::Full(8),
+            Alignment::Loose(8),
             SizedDefinition::I16(Endian::Big),
             SizedDisplay::Decimal,
         );
 
         // Starting at 0
         assert_eq!(2, t.actual_size(s_offset)?);
+        assert_eq!(0..2, t.actual_range(s_offset)?);
+
         assert_eq!(8, t.aligned_size(s_offset)?);
+        assert_eq!(0..8, t.aligned_range(s_offset)?);
+
+        // Starting at 2
+        assert_eq!(2, t.actual_size(s_offset.at(2))?);
+        assert_eq!(2..4, t.actual_range(s_offset.at(2))?);
+
+        assert_eq!(6, t.aligned_size(s_offset.at(2))?);
+        assert_eq!(2..8, t.aligned_range(s_offset.at(2))?);
 
         // Starting at 7, the value spans two alignment blocks, and therefore
-        // the size is double
+        // the size is larger
         assert_eq!(2, t.actual_size(s_offset.at(7))?);
-        assert_eq!(16, t.aligned_size(s_offset.at(7))?);
+        assert_eq!(7..9, t.actual_range(s_offset.at(7))?);
 
-        assert_eq!(2, t.actual_size(d_offset)?);
-        assert_eq!(8, t.aligned_size(d_offset)?);
+        assert_eq!(9, t.aligned_size(s_offset.at(7))?);
+        assert_eq!(7..16, t.aligned_range(s_offset.at(7))?);
 
         assert_eq!("0",      t.to_string(d_offset.at(0))?);
         assert_eq!("32767",  t.to_string(d_offset.at(2))?);

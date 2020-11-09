@@ -10,20 +10,13 @@ pub enum Alignment {
     /// Don't align at all
     None,
 
-    /// Align after.
-    ///
     /// Each field is padded until its length is a multiple of the padding
     /// Length.. so 0..1 aligned to 4 will be 0..4, and 1..2 aligned to 4 will
     /// be 1..5
-    After(u64),
-
-    /// Align before and after.
-    ///
-    /// Each field must start and end on a multiple of the alignment value.
-    Full(u64),
+    Loose(u64),
 
     /// Only pad after, but error out if the start isn't aligned.
-    AfterStrict(u64),
+    Strict(u64),
 }
 
 impl Alignment {
@@ -40,13 +33,13 @@ impl Alignment {
         number - remainder + multiple
     }
 
-    fn round_down(number: u64, multiple: u64) -> u64 {
-        if multiple == 0 {
-            return number;
-        }
+    // fn round_down(number: u64, multiple: u64) -> u64 {
+    //     if multiple == 0 {
+    //         return number;
+    //     }
 
-        number - (number % multiple)
-    }
+    //     number - (number % multiple)
+    // }
 
     pub fn align(self, range: Range<u64>) -> SimpleResult<Range<u64>> {
         if range.end < range.start {
@@ -55,13 +48,10 @@ impl Alignment {
 
         match self {
             Self::None => Ok(range),
-            Self::After(m) => {
+            Self::Loose(m) => {
                 Ok(range.start..Self::round_up(range.end, m))
             },
-            Self::Full(m) => {
-                Ok(Self::round_down(range.start, m)..Self::round_up(range.end, m))
-            },
-            Self::AfterStrict(m) => {
+            Self::Strict(m) => {
                 if m != 0 && (range.start % m != 0) {
                     bail!("Alignment error");
                 }
@@ -96,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn test_after() -> SimpleResult<()> {
+    fn test_loose() -> SimpleResult<()> {
         let tests: Vec<(Range<u64>, u64, Range<u64>)> = vec![
             //  value  multiple  expected
             (    0..0,        0,     0..0),
@@ -111,36 +101,14 @@ mod tests {
         ];
 
         for (value, multiple, expected) in tests {
-            assert_eq!(expected, Alignment::After(multiple).align(value)?);
+            assert_eq!(expected, Alignment::Loose(multiple).align(value)?);
         }
 
         Ok(())
     }
 
     #[test]
-    fn test_full() -> SimpleResult<()> {
-        let tests: Vec<(Range<u64>, u64, Range<u64>)> = vec![
-            //  value  multiple  expected
-            (    0..0,        0,     0..0),
-            (    2..4,        4,     0..4),
-            (    1..1,        4,     0..4),
-            (    0..2,        4,     0..4),
-            (    1..3,        4,     0..4),
-            (    3..4,        4,     0..4),
-            (    5..5,        4,     4..8),
-            (   5..10,      789,   0..789),
-            (4..10200,    10000, 0..20000),
-        ];
-
-        for (value, multiple, expected) in tests {
-            assert_eq!(expected, Alignment::Full(multiple).align(value)?);
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_after_strict() -> SimpleResult<()> {
+    fn test_strict() -> SimpleResult<()> {
         let good_tests: Vec<(Range<u64>, u64, Range<u64>)> = vec![
             //      value  multiple  expected
             (    0..0,        0,         0..0),
@@ -155,7 +123,7 @@ mod tests {
         ];
 
         for (value, multiple, expected) in good_tests {
-            assert_eq!(expected, Alignment::AfterStrict(multiple).align(value)?);
+            assert_eq!(expected, Alignment::Strict(multiple).align(value)?);
         }
 
         let bad_tests: Vec<(Range<u64>, u64)> = vec![
@@ -172,7 +140,7 @@ mod tests {
         ];
 
         for (value, multiple) in bad_tests {
-            assert!(Alignment::AfterStrict(multiple).align(value).is_err());
+            assert!(Alignment::Strict(multiple).align(value).is_err());
         }
 
         Ok(())

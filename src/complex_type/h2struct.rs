@@ -219,20 +219,20 @@ mod tests {
         // Line 5: A 1-byte value to make sure we got to the right place
         let data = b"P\x01PP\
                      \x02PPP\
-                     ZZZP\
-                     AAPP\
+                     ZZZA\
+                     APPP\
                      \x05\x06\x07\x08PPPP\
                      \x0c\x0b\x0a\x09PPPP\
-                     \x0d".to_vec();
+                     \x0dPPP".to_vec();
 
         // Note: starting at offset 1 (so we can test the full alignment)
         let d_offset = ResolveOffset::Dynamic(Context::new_at(&data, 1));
 
-        let t = H2Struct::new_aligned(Alignment::After(4), vec![
+        let t = H2Struct::new_aligned(Alignment::Loose(4), vec![
             (
                 "field_u8_full".to_string(),
                 H2Number::new_aligned(
-                    Alignment::Full(4),
+                    Alignment::Loose(4),
                     SizedDefinition::U8,
                     SizedDisplay::Hex(Default::default()),
                 )
@@ -240,7 +240,7 @@ mod tests {
             (
                 "field_u8_after".to_string(),
                 H2Number::new_aligned(
-                    Alignment::After(4),
+                    Alignment::Loose(4),
                     SizedDefinition::U8,
                     SizedDisplay::Hex(Default::default()),
                 )
@@ -255,7 +255,7 @@ mod tests {
                     (
                         "nested_field_u16_full".to_string(),
                         H2Number::new_aligned(
-                            Alignment::Full(4),
+                            Alignment::Loose(4),
                             SizedDefinition::U16(Endian::Big),
                             SizedDisplay::Hex(Default::default()),
                         )
@@ -265,7 +265,7 @@ mod tests {
             (
                 "u32_big".to_string(),
                 H2Number::new_aligned(
-                    Alignment::After(8),
+                    Alignment::Loose(8),
                     SizedDefinition::U32(Endian::Big),
                     SizedDisplay::Hex(Default::default()),
                 )
@@ -273,7 +273,7 @@ mod tests {
             (
                 "u32_little".to_string(),
                 H2Number::new_aligned(
-                    Alignment::After(8),
+                    Alignment::Loose(8),
                     SizedDefinition::U32(Endian::Little),
                     SizedDisplay::Hex(Default::default()),
                 )
@@ -289,8 +289,8 @@ mod tests {
         ]);
 
         // The sum of all the fields, with the fields' own alignment
-        assert_eq!(33, t.actual_size(d_offset)?);
-        assert_eq!(1..34, t.actual_range(d_offset)?);
+        assert_eq!(32, t.actual_size(d_offset)?);
+        assert_eq!(1..33, t.actual_range(d_offset)?);
 
         // We start offset by 1, which means to get to the next aligned size
         // (36), it would make this 35 long
@@ -307,7 +307,7 @@ mod tests {
 
         assert_eq!("0x01", resolved[0].to_string(d_offset)?);
         assert_eq!(1..2,   resolved[0].actual_range);
-        assert_eq!(0..4,   resolved[0].aligned_range);
+        assert_eq!(1..4,   resolved[0].aligned_range);
 
         assert_eq!("0x02", resolved[1].to_string(d_offset)?);
         assert_eq!(4..5,   resolved[1].actual_range);
@@ -325,12 +325,21 @@ mod tests {
         assert_eq!(10..11, resolved[4].actual_range);
         assert_eq!(10..11, resolved[4].aligned_range);
 
-        // println!("{:#?}", resolved[4]);
-        // println!("--");
-        // println!("{:#?}", resolved[5]);
-        // assert_eq!("0x4141", resolved[5].to_string(d_offset)?);
-        // assert_eq!(12..13,   resolved[5].actual_range);
-        // assert_eq!(11..16,   resolved[5].aligned_range);
+        assert_eq!("0x4141", resolved[5].to_string(d_offset)?);
+        assert_eq!(11..13,   resolved[5].actual_range);
+        assert_eq!(11..16,   resolved[5].aligned_range);
+
+        assert_eq!("0x05060708", resolved[6].to_string(d_offset)?);
+        assert_eq!(16..20,       resolved[6].actual_range);
+        assert_eq!(16..24,       resolved[6].aligned_range);
+
+        assert_eq!("0x090a0b0c", resolved[7].to_string(d_offset)?);
+        assert_eq!(24..28,       resolved[7].actual_range);
+        assert_eq!(24..32,       resolved[7].aligned_range);
+
+        assert_eq!("0x0d", resolved[8].to_string(d_offset)?);
+        assert_eq!(32..33, resolved[8].actual_range);
+        assert_eq!(32..33, resolved[8].aligned_range);
 
         Ok(())
     }

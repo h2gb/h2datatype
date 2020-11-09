@@ -55,7 +55,16 @@ impl H2TypeTrait for H2Array {
                 field_type: (*self.field_type).clone(),
             });
 
-            start = start + self.field_type.aligned_size(this_offset)?
+            // I'm not sure if this is a good idea, but...
+            //
+            // This ensures that the array field starts in the same "place"
+            // in every element of the array. I think that makes sense to my
+            // brain, but I'm not sure I like having this special case...
+            if let Alignment::Loose(a) = self.field_type.alignment {
+                start = start + a;
+            } else {
+                start = start + self.field_type.aligned_size(this_offset)?;
+            }
         };
 
         Ok(result)
@@ -166,7 +175,7 @@ mod tests {
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,
-            H2Number::new_aligned(Alignment::After(4), SizedDefinition::U8, SizedDisplay::Hex(Default::default()))
+            H2Number::new_aligned(Alignment::Loose(4), SizedDefinition::U8, SizedDisplay::Hex(Default::default()))
         );
 
         // Even though it's 4x U8 values, with padding it should be 16
@@ -206,9 +215,9 @@ mod tests {
         // An array of 4 elements
         let t = H2Array::new(4,
             // Array of 2 elements, each of which is aligned to a 4-byte boundary
-            H2Array::new_aligned(Alignment::After(4), 2,
+            H2Array::new_aligned(Alignment::Loose(4), 2,
                 // Each element is a 1-byte hex number aligned to a 2-byte bounary
-                H2Number::new_aligned(Alignment::After(2), SizedDefinition::U8, SizedDisplay::Hex(Default::default()))
+                H2Number::new_aligned(Alignment::Loose(2), SizedDefinition::U8, SizedDisplay::Hex(Default::default()))
             )
         );
 
@@ -246,7 +255,7 @@ mod tests {
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,
-            Character::new_aligned(Alignment::Full(4))
+            Character::new_aligned(Alignment::Loose(4))
         );
 
         // Resolve starting at 1, but due to the padding the range will be
@@ -255,19 +264,19 @@ mod tests {
         assert_eq!(4, resolved.len());
 
         assert_eq!(1..2, resolved[0].actual_range);
-        assert_eq!(0..4, resolved[0].aligned_range);
+        assert_eq!(1..4, resolved[0].aligned_range);
         assert_eq!("A", resolved[0].to_string(d_offset)?);
 
         assert_eq!(5..6, resolved[1].actual_range);
-        assert_eq!(4..8, resolved[1].aligned_range);
+        assert_eq!(5..8, resolved[1].aligned_range);
         assert_eq!("B", resolved[1].to_string(d_offset)?);
 
         assert_eq!(9..10, resolved[2].actual_range);
-        assert_eq!(8..12, resolved[2].aligned_range);
+        assert_eq!(9..12, resolved[2].aligned_range);
         assert_eq!("C", resolved[2].to_string(d_offset)?);
 
         assert_eq!(13..14, resolved[3].actual_range);
-        assert_eq!(12..16, resolved[3].aligned_range);
+        assert_eq!(13..16, resolved[3].aligned_range);
         assert_eq!("D", resolved[3].to_string(d_offset)?);
 
         Ok(())

@@ -9,8 +9,8 @@ use crate::{Alignment, H2Types, H2TypeTrait, ResolveOffset, ResolvedType};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Type {
-    field: H2Types,
-    alignment: Alignment,
+    pub field: H2Types,
+    pub alignment: Alignment,
 }
 
 impl H2Type {
