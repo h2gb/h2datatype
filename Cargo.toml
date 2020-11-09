@@ -1,0 +1,21 @@
+[package]
+name = "h2datatype"
+version = "0.1.0"
+authors = ["iagox86 <ron-git@skullsecurity.org>"]
+edition = "2018"
+
+[features]
+serialize = ["serde", "ron", "sized_number/serialize"]
+
+[dependencies]
+simple-error = "~0.2.1"
+
+# Disabled by default (controlled by serialize)
+serde = { version = "~1.0.110", optional = true }
+ron   = { version = "~0.5.1",   optional = true }
+
+# Stuff I wrote
+sized_number = { git = "https://github.com/h2gb/sized_number.git", version = "~0.0.0", features = ["serialize"], branch = "dev"}
+
+[dev-dependencies]
+pretty_assertions = "~0.6.1"
