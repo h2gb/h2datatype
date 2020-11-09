@@ -1,4 +1,3 @@
-// TODO: Get rid of `pub mod` when I get around to it, and just use the uses
 mod h2number;
 pub use h2number::H2Number;
 

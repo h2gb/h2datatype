@@ -33,10 +33,18 @@ impl H2TypeTrait for H2Array {
     }
 
     fn size(&self, offset: Offset) -> SimpleResult<u64> {
-        match self.is_static() {
-            // TODO: Alignment might make this weird
-            true => Ok(self.length * self.field_type.aligned_size(offset)?),
-            false => bail!("We can't calculate size of Dynamic arrays yet"),
+        // The only safe way to get the size is to subtract the end of the last
+        // entry from the start of the first
+        let resolved = self.resolve_partial(offset)?;
+
+        if let Some(first) = resolved.first() {
+            if let Some(last) = resolved.last() {
+                return Ok(last.aligned_range.end - first.aligned_range.start);
+            } else {
+                bail!("No elements");
+            }
+        } else {
+            bail!("No elements");
         }
     }
 
@@ -251,16 +259,18 @@ mod tests {
     fn test_offset_padding() -> SimpleResult<()> {
         // The - characters will be in the padding
         let data = b"-A---B---C---D--".to_vec();
-        let d_offset = Offset::Dynamic(Context::new(&data));
+        let d_offset = Offset::Dynamic(Context::new(&data).at(1));
 
         // An array of 4 32-bit unsigned integers
         let t = H2Array::new(4,
             Character::new_aligned(Alignment::Loose(4))
         );
 
+        assert_eq!(15, t.actual_size(d_offset)?);
+
         // Resolve starting at 1, but due to the padding the range will be
         // 0..4
-        let resolved = t.resolve_full(d_offset.at(1))?;
+        let resolved = t.resolve_full(d_offset)?;
         assert_eq!(4, resolved.len());
 
         assert_eq!(1..2, resolved[0].actual_range);
