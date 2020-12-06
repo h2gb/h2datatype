@@ -27,7 +27,7 @@ impl H2TypeTrait for Character {
         true
     }
 
-    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
+    fn actual_size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(1)
     }
 
@@ -53,7 +53,7 @@ mod tests {
     use sized_number::Context;
 
     #[test]
-    fn test_character() -> SimpleResult<()> {
+    fn test_character_to_string() -> SimpleResult<()> {
         let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
@@ -66,6 +66,80 @@ mod tests {
         assert_eq!("<invalid>", Character::new().to_string(offset.at(6))?);
         assert_eq!("<invalid>", Character::new().to_string(offset.at(7))?);
         assert_eq!("<invalid>", Character::new().to_string(offset.at(8))?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_character_type_unaligned() -> SimpleResult<()> {
+        let c = Character::new();
+
+        assert_eq!(true, c.is_static());
+
+        assert_eq!(1, c.actual_size(Offset::Static(0))?);
+        assert_eq!(0..1, c.actual_range(Offset::Static(0))?);
+
+        assert_eq!(1, c.aligned_size(Offset::Static(0))?);
+        assert_eq!(0..1, c.aligned_range(Offset::Static(0))?);
+
+        assert_eq!(0, c.children(Offset::Static(0))?.len());
+        assert_eq!(0, c.related(Offset::Static(0))?.len());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_character_resolve() -> SimpleResult<()> {
+        let data = b"\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let r = Character::new().resolve(offset)?;
+        assert_eq!(1, r.actual_size());
+        assert_eq!(0..1, r.actual_range);
+
+        assert_eq!(1, r.aligned_size());
+        assert_eq!(0..1, r.aligned_range);
+
+        assert_eq!(0, r.children.len());
+        assert_eq!(0, r.related.len());
+        assert_eq!("A", r.value);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_character_type_aligned() -> SimpleResult<()> {
+        let c = Character::new_aligned(Alignment::Loose(4));
+
+        assert_eq!(true, c.is_static());
+
+        assert_eq!(1, c.actual_size(Offset::Static(0))?);
+        assert_eq!(0..1, c.actual_range(Offset::Static(0))?);
+
+        assert_eq!(4, c.aligned_size(Offset::Static(0))?);
+        assert_eq!(0..4, c.aligned_range(Offset::Static(0))?);
+
+        assert_eq!(0, c.children(Offset::Static(0))?.len());
+        assert_eq!(0, c.related(Offset::Static(0))?.len());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_character_resolve_aligned() -> SimpleResult<()> {
+        let data = b"\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let r = Character::new_aligned(Alignment::Loose(4)).resolve(offset)?;
+        assert_eq!(1, r.actual_size());
+        assert_eq!(0..1, r.actual_range);
+
+        assert_eq!(4, r.aligned_size());
+        assert_eq!(0..4, r.aligned_range);
+
+        assert_eq!(0, r.children.len());
+        assert_eq!(0, r.related.len());
+        assert_eq!("A", r.value);
 
         Ok(())
     }

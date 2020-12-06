@@ -21,19 +21,19 @@ impl H2Type {
         }
     }
 
-    pub fn field_type(&self) -> &dyn H2TypeTrait {
+    fn field_type(&self) -> &dyn H2TypeTrait {
         match &self.field {
             // Basic
-            H2Types::H2Number(t)  => t,
-            H2Types::H2Pointer(t) => t,
+            // H2Types::H2Number(t)  => t,
+            // H2Types::H2Pointer(t) => t,
             H2Types::Character(t) => t,
-            H2Types::IPv4(t)      => t,
-            H2Types::IPv6(t)      => t,
-            H2Types::Unicode(t)   => t,
+            // H2Types::IPv4(t)      => t,
+            // H2Types::IPv6(t)      => t,
+            // H2Types::Unicode(t)   => t,
 
             // Complex
-            H2Types::H2Array(t)   => t,
-            H2Types::H2Struct(t)  => t,
+            // H2Types::H2Array(t)   => t,
+            // H2Types::H2Struct(t)  => t,
 
             // Dynamic
             // H2Types::NTString(t)  => t,
@@ -47,38 +47,24 @@ impl H2Type {
 
     /// Size of just the field - no padding
     pub fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
-        self.field_type().size(offset)
-    }
-
-    /// Range of values this covers, with alignment padding built-in
-    pub fn actual_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
-        // Get the start and end
-        let start = offset.position();
-        let end   = offset.position() + self.actual_size(offset)?;
-
-        // Do the rounding
-        Ok(start..end)
-    }
-
-    /// Range of values this covers, with alignment padding built-in
-    pub fn aligned_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
-        // Get the start and end
-        let start = offset.position();
-        let end   = offset.position() + self.actual_size(offset)?;
-
-        // Do the rounding
-        self.alignment.align(start..end)
+        self.field_type().actual_size(offset)
     }
 
     /// Size including padding either before or after
     pub fn aligned_size(&self, offset: Offset) -> SimpleResult<u64> {
-        let range = self.aligned_range(offset)?;
-
-        Ok(range.end - range.start)
+        self.field_type().aligned_size(offset, self.alignment)
     }
 
-    pub fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
-        self.field_type().resolve_partial(offset)
+    pub fn actual_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
+        self.field_type().range(offset, Alignment::None)
+    }
+
+    // What range does this cover? Use [`Alignment::None`] to get the size
+    // without alignment
+    //
+    // As long as actual_size() works, this will automatically work.
+    pub fn aligned_range(&self, offset: Offset) -> SimpleResult<Range<u64>> {
+        self.field_type().range(offset, self.alignment)
     }
 
     // Render as a string
@@ -91,27 +77,11 @@ impl H2Type {
         self.field_type().related(offset)
     }
 
-    pub fn resolve_full(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
-        let children = self.resolve_partial(offset)?;
-        let mut result: Vec<ResolvedType> = Vec::new();
+    pub fn children(&self, offset: Offset) -> SimpleResult<Vec<H2Type>> {
+        self.field_type().children(offset)
+    }
 
-        if children.len() == 0 {
-            // No children? Return ourself!
-            result.push(ResolvedType {
-                actual_range: self.actual_range(offset)?,
-                aligned_range: self.aligned_range(offset)?,
-                field_name: None,
-                field_type: self.clone(),
-                value: self.to_string(offset)?,
-            });
-        } else {
-            // Children? Gotta get 'em all!
-            for child in children.iter() {
-                result.append(&mut child.field_type.resolve_full(offset.at(child.actual_range.start))?);
-            }
-        }
-
-        Ok(result)
+    pub fn resolve(&self, offset: Offset) -> SimpleResult<ResolvedType> {
+        self.field_type().resolve(offset, self.alignment, None)
     }
 }
-

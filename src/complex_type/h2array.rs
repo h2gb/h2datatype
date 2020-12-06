@@ -32,22 +32,6 @@ impl H2TypeTrait for H2Array {
         self.field_type.is_static()
     }
 
-    fn size(&self, offset: Offset) -> SimpleResult<u64> {
-        // The only safe way to get the size is to subtract the end of the last
-        // entry from the start of the first
-        let resolved = self.resolve_partial(offset)?;
-
-        if let Some(first) = resolved.first() {
-            if let Some(last) = resolved.last() {
-                return Ok(last.aligned_range.end - first.aligned_range.start);
-            } else {
-                bail!("No elements");
-            }
-        } else {
-            bail!("No elements");
-        }
-    }
-
     fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
         let mut result = vec![];
         let mut start: u64 = offset.position();
@@ -62,6 +46,9 @@ impl H2TypeTrait for H2Array {
                 field_name: Some(i.to_string()),
                 field_type: (*self.field_type).clone(),
                 value: self.field_type.to_string(this_offset)?,
+
+                children: self.field_type.resolve_partial(this_offset)?,
+                related:  vec![],
             });
 
             // I'm not sure if this is a good idea, but...
