@@ -1,10 +1,7 @@
-use simple_error::{SimpleResult, bail};
-use std::char;
+use simple_error::SimpleResult;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
-
-use sized_number::{Endian, Context};
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
@@ -23,31 +20,6 @@ impl UTF8 {
     pub fn new() -> H2Type {
         Self::new_aligned(Alignment::None)
     }
-
-    fn try_utf8(&self, slice: &[u8]) -> SimpleResult<char> {
-      if let Ok(s) = std::str::from_utf8(&slice) {
-          if let Some(c) = s.chars().next() {
-              return Ok(c);
-          }
-      }
-
-      bail!("Could not convert");
-    }
-
-    fn read_utf8(&self, offset: Offset) -> SimpleResult<(u64, char)> {
-        let context = offset.get_dynamic()?;
-        let slice = context.as_slice();
-
-        for i in 1..=4 {
-            if slice.len() >= i {
-                if let Ok(c) = self.try_utf8(&slice[0..i]) {
-                    return Ok((i as u64, c));
-                }
-            }
-        }
-
-        bail!("Could not decode utf8 string!");
-    }
 }
 
 impl H2TypeTrait for UTF8 {
@@ -56,15 +28,15 @@ impl H2TypeTrait for UTF8 {
     }
 
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
-        let (size, _) = self.read_utf8(offset)?;
+        let context = offset.get_dynamic()?;
 
-        Ok(size)
+        Ok(context.read_utf8()?.0 as u64)
     }
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        let (_, c) = self.read_utf8(offset)?;
+        let context = offset.get_dynamic()?;
 
-        Ok(format!("{}", c))
+        Ok(context.read_utf8()?.1.to_string())
     }
 }
 

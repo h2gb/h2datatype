@@ -1,10 +1,9 @@
-use simple_error::{SimpleResult, bail};
-use std::char;
+use simple_error::SimpleResult;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use sized_number::{Endian, Context};
+use sized_number::Endian;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
@@ -25,48 +24,6 @@ impl UTF16 {
     pub fn new(endian: Endian) -> H2Type {
         Self::new_aligned(Alignment::None, endian)
     }
-
-    fn read_unicode16(&self, context: Context) -> SimpleResult<char> {
-        // Just read one number
-        let numbers = vec![
-            context.read_u16(self.endian)?,
-        ];
-
-        if let Ok(s) = String::from_utf16(&numbers) {
-            if let Some(c) = s.chars().next() {
-                return Ok(c);
-            }
-        }
-
-        bail!("Failed to parse unicode character");
-    }
-
-    fn read_unicode32(&self, context: Context) -> SimpleResult<char> {
-        let numbers = vec![
-            context.read_u16(self.endian)?,
-            context.at(context.position() + 2).read_u16(self.endian)?,
-        ];
-
-        if let Ok(s) = String::from_utf16(&numbers) {
-            if let Some(c) = s.chars().next() {
-                return Ok(c);
-            }
-        }
-
-        bail!("Failed to parse unicode character");
-    }
-
-    fn read_unicode(&self, offset: Offset) -> SimpleResult<(u64, char)> {
-        let context = offset.get_dynamic()?;
-
-        // Try 16 bits first
-        if let Ok(c) = self.read_unicode16(context) {
-            return Ok((2, c));
-        }
-
-        // If that fails, commit to 32 bits
-        Ok((4, self.read_unicode32(context)?))
-    }
 }
 
 impl H2TypeTrait for UTF16 {
@@ -75,15 +32,15 @@ impl H2TypeTrait for UTF16 {
     }
 
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
-        let (size, _) = self.read_unicode(offset)?;
+        let context = offset.get_dynamic()?;
 
-        Ok(size)
+        Ok(context.read_utf16(self.endian)?.0 as u64)
     }
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        let (_, c) = self.read_unicode(offset)?;
+        let context = offset.get_dynamic()?;
 
-        Ok(format!("{}", c))
+        Ok(context.read_utf16(self.endian)?.1.to_string())
     }
 }
 

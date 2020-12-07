@@ -1,10 +1,9 @@
-use simple_error::{SimpleResult, bail};
-use std::char;
+use simple_error::SimpleResult;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use sized_number::{Endian, Context};
+use sized_number::Endian;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
@@ -39,10 +38,7 @@ impl H2TypeTrait for UTF32 {
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         let context = offset.get_dynamic()?;
 
-        match char::from_u32(context.read_u32(self.endian)?) {
-            Some(c) => Ok(format!("{}", c)),
-            None => bail!("Cannot read as u32 character"),
-        }
+        Ok(context.read_utf32(self.endian)?.to_string())
     }
 }
 

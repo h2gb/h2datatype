@@ -1,4 +1,4 @@
-use simple_error::{bail, SimpleResult};
+use simple_error::SimpleResult;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};

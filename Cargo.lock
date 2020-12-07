@@ -136,7 +136,7 @@ checksum = "634bf7bc1315698154cb1b45c1db17fcd2e5ce41f925b7b4063e971536714bf1"
 [[package]]
 name = "sized_number"
 version = "0.0.0"
-source = "git+https://github.com/h2gb/sized_number.git?branch=dev#a195e01291f88a2ebd13e5078e4562137d318685"
+source = "git+https://github.com/h2gb/sized_number.git?branch=dev#eee964423e6fbc0e796a614236c0997cbb703cdf"
 dependencies = [
  "byteorder",
  "ron",
