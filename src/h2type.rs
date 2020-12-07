@@ -32,7 +32,7 @@ impl H2Type {
             // H2Types::Unicode(t)   => t,
 
             // Complex
-            // H2Types::H2Array(t)   => t,
+            H2Types::H2Array(t)   => t,
             // H2Types::H2Struct(t)  => t,
 
             // Dynamic

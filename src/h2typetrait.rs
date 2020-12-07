@@ -78,6 +78,16 @@ pub trait H2TypeTrait {
             child_offset = offset.at(range.end);
 
             Ok((range, child.clone()))
+            //// I'm not sure if this is a good idea, but...
+            ////
+            //// This ensures that the array field starts in the same "place"
+            //// in every element of the array. I think that makes sense to my
+            //// brain, but I'm not sure I like having this special case...
+            //if let Alignment::Loose(a) = self.field_type.alignment {
+            //    start = start + a;
+            //} else {
+            //    start = start + self.field_type.aligned_size(this_offset)?;
+            //}
         }).collect::<SimpleResult<Vec<(Range<u64>, H2Type)>>>()
     }
 

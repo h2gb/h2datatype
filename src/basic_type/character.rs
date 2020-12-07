@@ -53,24 +53,6 @@ mod tests {
     use sized_number::Context;
 
     #[test]
-    fn test_character_to_string() -> SimpleResult<()> {
-        let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
-        let offset = Offset::Dynamic(Context::new(&data));
-
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(0))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(1))?);
-        assert_eq!(" ",         Character::new().to_string(offset.at(2))?);
-        assert_eq!("A",         Character::new().to_string(offset.at(3))?);
-        assert_eq!("B",         Character::new().to_string(offset.at(4))?);
-        assert_eq!("~",         Character::new().to_string(offset.at(5))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(6))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(7))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(8))?);
-
-        Ok(())
-    }
-
-    #[test]
     fn test_character_type_unaligned() -> SimpleResult<()> {
         let c = Character::new();
 
@@ -140,6 +122,24 @@ mod tests {
         assert_eq!(0, r.children.len());
         assert_eq!(0, r.related.len());
         assert_eq!("A", r.value);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_character_to_string() -> SimpleResult<()> {
+        let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        assert_eq!("<invalid>", Character::new().to_string(offset.at(0))?);
+        assert_eq!("<invalid>", Character::new().to_string(offset.at(1))?);
+        assert_eq!(" ",         Character::new().to_string(offset.at(2))?);
+        assert_eq!("A",         Character::new().to_string(offset.at(3))?);
+        assert_eq!("B",         Character::new().to_string(offset.at(4))?);
+        assert_eq!("~",         Character::new().to_string(offset.at(5))?);
+        assert_eq!("<invalid>", Character::new().to_string(offset.at(6))?);
+        assert_eq!("<invalid>", Character::new().to_string(offset.at(7))?);
+        assert_eq!("<invalid>", Character::new().to_string(offset.at(8))?);
 
         Ok(())
     }

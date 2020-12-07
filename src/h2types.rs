@@ -2,7 +2,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::basic_type::*;
-// use crate::complex_type::*;
+use crate::complex_type::*;
 // use crate::dynamic_type::*;
 
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ pub enum H2Types {
     // Unicode(Unicode),
 
     // Complex
-    // H2Array(H2Array),
+    H2Array(H2Array),
     // H2Struct(H2Struct),
 
     // Dynamic
