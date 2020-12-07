@@ -14,7 +14,7 @@ pub enum H2Types {
     Character(Character),
     IPv4(IPv4),
     IPv6(IPv6),
-    // Unicode(Unicode),
+    Unicode(Unicode),
 
     // Complex
     H2Array(H2Array),
