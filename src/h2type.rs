@@ -29,6 +29,7 @@ impl H2Type {
             H2Types::Character(t) => t,
             H2Types::IPv4(t)      => t,
             H2Types::IPv6(t)      => t,
+            H2Types::UTF8(t)      => t,
             H2Types::UTF16(t)     => t,
             H2Types::UTF32(t)     => t,
 

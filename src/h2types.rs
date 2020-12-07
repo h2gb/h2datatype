@@ -14,6 +14,7 @@ pub enum H2Types {
     Character(Character),
     IPv4(IPv4),
     IPv6(IPv6),
+    UTF8(UTF8),
     UTF16(UTF16),
     UTF32(UTF32),
 
