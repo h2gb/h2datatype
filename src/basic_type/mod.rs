@@ -13,5 +13,5 @@ pub use ipv6::IPv6;
 mod character;
 pub use character::Character;
 
-mod unicode;
-pub use unicode::Unicode;
+mod utf16;
+pub use utf16::UTF16;

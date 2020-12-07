@@ -11,13 +11,13 @@ use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct Unicode {
+pub struct UTF16 {
     endian: Endian,
 }
 
-impl Unicode {
+impl UTF16 {
     pub fn new_aligned(alignment: Alignment, endian: Endian) -> H2Type {
-        H2Type::new(alignment, H2Types::Unicode(Self {
+        H2Type::new(alignment, H2Types::UTF16(Self {
             endian: endian
         }))
     }
@@ -69,9 +69,8 @@ impl Unicode {
     }
 }
 
-impl H2TypeTrait for Unicode {
+impl H2TypeTrait for UTF16 {
     fn is_static(&self) -> bool {
-        //f0 9d 84 9e Unicode requires context
         false
     }
 
@@ -101,14 +100,14 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!(2, Unicode::new(Endian::Big).actual_size(offset.at(0))?);
-        assert_eq!(2, Unicode::new(Endian::Big).actual_size(offset.at(2))?);
-        assert_eq!(2, Unicode::new(Endian::Big).actual_size(offset.at(4))?);
-        assert_eq!(2, Unicode::new(Endian::Big).actual_size(offset.at(6))?);
+        assert_eq!(2, UTF16::new(Endian::Big).actual_size(offset.at(0))?);
+        assert_eq!(2, UTF16::new(Endian::Big).actual_size(offset.at(2))?);
+        assert_eq!(2, UTF16::new(Endian::Big).actual_size(offset.at(4))?);
+        assert_eq!(2, UTF16::new(Endian::Big).actual_size(offset.at(6))?);
 
         // Double
-        assert_eq!(4, Unicode::new(Endian::Big).actual_size(offset.at(8))?);
-        assert_eq!(4, Unicode::new(Endian::Big).actual_size(offset.at(12))?);
+        assert_eq!(4, UTF16::new(Endian::Big).actual_size(offset.at(8))?);
+        assert_eq!(4, UTF16::new(Endian::Big).actual_size(offset.at(12))?);
 
         Ok(())
     }
@@ -120,14 +119,14 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("A", Unicode::new(Endian::Big).to_string(offset.at(0))?);
-        assert_eq!("B", Unicode::new(Endian::Big).to_string(offset.at(2))?);
-        assert_eq!("❄", Unicode::new(Endian::Big).to_string(offset.at(4))?);
-        assert_eq!("☢", Unicode::new(Endian::Big).to_string(offset.at(6))?);
+        assert_eq!("A", UTF16::new(Endian::Big).to_string(offset.at(0))?);
+        assert_eq!("B", UTF16::new(Endian::Big).to_string(offset.at(2))?);
+        assert_eq!("❄", UTF16::new(Endian::Big).to_string(offset.at(4))?);
+        assert_eq!("☢", UTF16::new(Endian::Big).to_string(offset.at(6))?);
 
         // Double
-        assert_eq!("𝄞", Unicode::new(Endian::Big).to_string(offset.at(8))?);
-        assert_eq!("😈", Unicode::new(Endian::Big).to_string(offset.at(12))?);
+        assert_eq!("𝄞", UTF16::new(Endian::Big).to_string(offset.at(8))?);
+        assert_eq!("😈", UTF16::new(Endian::Big).to_string(offset.at(12))?);
 
         Ok(())
     }
@@ -139,14 +138,14 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("A", Unicode::new(Endian::Little).to_string(offset.at(0))?);
-        assert_eq!("B", Unicode::new(Endian::Little).to_string(offset.at(2))?);
-        assert_eq!("❄", Unicode::new(Endian::Little).to_string(offset.at(4))?);
-        assert_eq!("☢", Unicode::new(Endian::Little).to_string(offset.at(6))?);
+        assert_eq!("A", UTF16::new(Endian::Little).to_string(offset.at(0))?);
+        assert_eq!("B", UTF16::new(Endian::Little).to_string(offset.at(2))?);
+        assert_eq!("❄", UTF16::new(Endian::Little).to_string(offset.at(4))?);
+        assert_eq!("☢", UTF16::new(Endian::Little).to_string(offset.at(6))?);
 
         // Double
-        assert_eq!("𝄞", Unicode::new(Endian::Little).to_string(offset.at(8))?);
-        assert_eq!("😈", Unicode::new(Endian::Little).to_string(offset.at(12))?);
+        assert_eq!("𝄞", UTF16::new(Endian::Little).to_string(offset.at(8))?);
+        assert_eq!("😈", UTF16::new(Endian::Little).to_string(offset.at(12))?);
 
         Ok(())
     }
