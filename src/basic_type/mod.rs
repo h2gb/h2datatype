@@ -10,8 +10,8 @@ pub use ipv4::IPv4;
 mod ipv6;
 pub use ipv6::IPv6;
 
-mod character;
-pub use character::Character;
+mod ascii;
+pub use ascii::ASCII;
 
 mod utf8;
 pub use utf8::UTF8;

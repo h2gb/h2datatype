@@ -64,7 +64,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::Context;
 
-    use crate::basic_type::Character;
+    use crate::basic_type::ASCII;
 
     #[test]
     fn test_array_type() -> SimpleResult<()> {
@@ -72,7 +72,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Check the basics
-        let a = H2Array::new(4, Character::new())?;
+        let a = H2Array::new(4, ASCII::new())?;
         assert_eq!(true, a.is_static());
         assert_eq!(4, a.actual_size(offset)?);
         assert_eq!(4, a.aligned_size(offset)?);
@@ -113,7 +113,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Check the basics
-        let a = H2Array::new_aligned(Alignment::Loose(8), 4, Character::new())?;
+        let a = H2Array::new_aligned(Alignment::Loose(8), 4, ASCII::new())?;
         assert_eq!(true, a.is_static());
         assert_eq!(4, a.actual_size(offset)?);
         assert_eq!(8, a.aligned_size(offset)?);
@@ -154,7 +154,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Check the basics
-        let a = H2Array::new(4, Character::new_aligned(Alignment::Loose(4)))?;
+        let a = H2Array::new(4, ASCII::new_aligned(Alignment::Loose(4)))?;
         assert_eq!(true, a.is_static());
         assert_eq!(16,  a.actual_size(offset)?);
         assert_eq!(16, a.aligned_size(offset)?);
@@ -201,7 +201,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Check the basics (align to 5, which is awkward but easy to check)
-        let a = H2Array::new_aligned(Alignment::Loose(5), 4, Character::new_aligned(Alignment::Loose(4)))?;
+        let a = H2Array::new_aligned(Alignment::Loose(5), 4, ASCII::new_aligned(Alignment::Loose(4)))?;
         assert_eq!(true, a.is_static());
         assert_eq!(16,  a.actual_size(offset)?);
         assert_eq!(20, a.aligned_size(offset)?);
@@ -247,7 +247,7 @@ mod tests {
         let data = b"xAxxBxxxCxxxDxxx".to_vec();
         let offset = Offset::Dynamic(Context::new(&data).at(1));
 
-        let a = H2Array::new(4, Character::new_aligned(Alignment::Loose(4)))?;
+        let a = H2Array::new(4, ASCII::new_aligned(Alignment::Loose(4)))?;
         assert_eq!(true, a.is_static());
         assert_eq!(15,  a.actual_size(offset)?);
         assert_eq!(15, a.aligned_size(offset)?);
@@ -453,7 +453,7 @@ mod tests {
 
 //         // An array of 4 32-bit unsigned integers
 //         let t = H2Array::new(4,
-//             Character::new_aligned(Alignment::Loose(4))
+//             ASCII::new_aligned(Alignment::Loose(4))
 //         );
 
 //         assert_eq!(15, t.actual_size(d_offset)?);

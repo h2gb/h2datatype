@@ -8,12 +8,13 @@ use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct Character {
+pub struct ASCII {
 }
 
-impl Character {
+// TODO: Add strict / loose options
+impl ASCII {
     pub fn new_aligned(alignment: Alignment) -> H2Type {
-        H2Type::new(alignment, H2Types::Character(Self {
+        H2Type::new(alignment, H2Types::ASCII(Self {
         }))
     }
 
@@ -22,7 +23,7 @@ impl Character {
     }
 }
 
-impl H2TypeTrait for Character {
+impl H2TypeTrait for ASCII {
     fn is_static(&self) -> bool {
         true
     }
@@ -33,7 +34,7 @@ impl H2TypeTrait for Character {
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
-            Offset::Static(_) => Ok("Character".to_string()),
+            Offset::Static(_) => Ok("ASCII".to_string()),
             Offset::Dynamic(context) => {
                 let number = context.read_u8()?;
 
@@ -53,8 +54,8 @@ mod tests {
     use sized_number::Context;
 
     #[test]
-    fn test_character_type_unaligned() -> SimpleResult<()> {
-        let c = Character::new();
+    fn test_ascii_type_unaligned() -> SimpleResult<()> {
+        let c = ASCII::new();
 
         assert_eq!(true, c.is_static());
 
@@ -71,11 +72,11 @@ mod tests {
     }
 
     #[test]
-    fn test_character_resolve() -> SimpleResult<()> {
+    fn test_ascii_resolve() -> SimpleResult<()> {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = Character::new().resolve(offset)?;
+        let r = ASCII::new().resolve(offset)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 
@@ -90,8 +91,8 @@ mod tests {
     }
 
     #[test]
-    fn test_character_type_aligned() -> SimpleResult<()> {
-        let c = Character::new_aligned(Alignment::Loose(4));
+    fn test_ascii_type_aligned() -> SimpleResult<()> {
+        let c = ASCII::new_aligned(Alignment::Loose(4));
 
         assert_eq!(true, c.is_static());
 
@@ -108,11 +109,11 @@ mod tests {
     }
 
     #[test]
-    fn test_character_resolve_aligned() -> SimpleResult<()> {
+    fn test_ascii_resolve_aligned() -> SimpleResult<()> {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = Character::new_aligned(Alignment::Loose(4)).resolve(offset)?;
+        let r = ASCII::new_aligned(Alignment::Loose(4)).resolve(offset)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 
@@ -127,19 +128,19 @@ mod tests {
     }
 
     #[test]
-    fn test_character_to_string() -> SimpleResult<()> {
+    fn test_ascii_to_string() -> SimpleResult<()> {
         let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(0))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(1))?);
-        assert_eq!(" ",         Character::new().to_string(offset.at(2))?);
-        assert_eq!("A",         Character::new().to_string(offset.at(3))?);
-        assert_eq!("B",         Character::new().to_string(offset.at(4))?);
-        assert_eq!("~",         Character::new().to_string(offset.at(5))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(6))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(7))?);
-        assert_eq!("<invalid>", Character::new().to_string(offset.at(8))?);
+        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(0))?);
+        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(1))?);
+        assert_eq!(" ",         ASCII::new().to_string(offset.at(2))?);
+        assert_eq!("A",         ASCII::new().to_string(offset.at(3))?);
+        assert_eq!("B",         ASCII::new().to_string(offset.at(4))?);
+        assert_eq!("~",         ASCII::new().to_string(offset.at(5))?);
+        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(6))?);
+        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(7))?);
+        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(8))?);
 
         Ok(())
     }
