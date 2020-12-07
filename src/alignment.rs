@@ -49,14 +49,16 @@ impl Alignment {
         match self {
             Self::None => Ok(range),
             Self::Loose(m) => {
-                Ok(range.start..Self::round_up(range.end, m))
+                let new_size = Self::round_up(range.end - range.start, m);
+                Ok(range.start..(range.start + new_size))
             },
             Self::Strict(m) => {
                 if m != 0 && (range.start % m != 0) {
                     bail!("Alignment error");
                 }
 
-                Ok(range.start..Self::round_up(range.end, m))
+                let new_size = Self::round_up(range.end - range.start, m);
+                Ok(range.start..(range.start + new_size))
             },
         }
     }
@@ -93,11 +95,11 @@ mod tests {
             (    0..0,        4,     0..0),
             (    0..1,        4,     0..4),
             (    0..2,        4,     0..4),
-            (    1..3,        4,     1..4),
-            (    3..4,        4,     3..4),
-            (    5..5,        4,     5..8),
-            (   1..10,      789,   1..789),
-            (4..10200,    10000, 4..20000),
+            (    1..3,        4,     1..5),
+            (    3..4,        4,     3..7),
+            (    5..5,        4,     5..5),
+            (   1..10,      789,   1..790),
+            (4..10200,    10000, 4..20004),
         ];
 
         for (value, multiple, expected) in tests {

@@ -107,8 +107,7 @@ mod tests {
     #[test]
     fn test_number_alignment() -> SimpleResult<()> {
         let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
-        let s_offset = Offset::Static(0);
-        let d_offset = Offset::Dynamic(Context::new(&data));
+        let offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Number::new_aligned(
             Alignment::Loose(8),
@@ -117,31 +116,34 @@ mod tests {
         );
 
         // Starting at 0
-        assert_eq!(2, t.actual_size(s_offset)?);
-        assert_eq!(0..2, t.actual_range(s_offset)?);
+        let this_offset = offset.at(0);
+        assert_eq!(2, t.actual_size(this_offset)?);
+        assert_eq!(0..2, t.actual_range(this_offset)?);
 
-        assert_eq!(8, t.aligned_size(s_offset)?);
-        assert_eq!(0..8, t.aligned_range(s_offset)?);
+        assert_eq!(8, t.aligned_size(this_offset)?);
+        assert_eq!(0..8, t.aligned_range(this_offset)?);
 
         // Starting at 2
-        assert_eq!(2, t.actual_size(s_offset.at(2))?);
-        assert_eq!(2..4, t.actual_range(s_offset.at(2))?);
+        let this_offset = offset.at(2);
+        assert_eq!(2, t.actual_size(this_offset)?);
+        assert_eq!(2..4, t.actual_range(this_offset)?);
 
-        assert_eq!(6, t.aligned_size(s_offset.at(2))?);
-        assert_eq!(2..8, t.aligned_range(s_offset.at(2))?);
+        assert_eq!(8, t.aligned_size(this_offset)?);
+        assert_eq!(2..10, t.aligned_range(this_offset)?);
 
-        // Starting at 7, the value spans two alignment blocks, and therefore
-        // the size is larger
-        assert_eq!(2, t.actual_size(s_offset.at(7))?);
-        assert_eq!(7..9, t.actual_range(s_offset.at(7))?);
+        // Starting at 7
+        let this_offset = offset.at(7);
+        assert_eq!(2, t.actual_size(this_offset)?);
+        assert_eq!(7..9, t.actual_range(this_offset)?);
 
-        assert_eq!(9, t.aligned_size(s_offset.at(7))?);
-        assert_eq!(7..16, t.aligned_range(s_offset.at(7))?);
+        assert_eq!(8, t.aligned_size(this_offset)?);
+        assert_eq!(7..15, t.aligned_range(this_offset)?);
 
-        assert_eq!("0",      t.to_string(d_offset.at(0))?);
-        assert_eq!("32767",  t.to_string(d_offset.at(2))?);
-        assert_eq!("-32768", t.to_string(d_offset.at(4))?);
-        assert_eq!("-1",     t.to_string(d_offset.at(6))?);
+        // Make sure the strings are correct
+        assert_eq!("0",      t.to_string(offset.at(0))?);
+        assert_eq!("32767",  t.to_string(offset.at(2))?);
+        assert_eq!("-32768", t.to_string(offset.at(4))?);
+        assert_eq!("-1",     t.to_string(offset.at(6))?);
 
         Ok(())
     }

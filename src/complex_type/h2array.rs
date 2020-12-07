@@ -244,40 +244,40 @@ mod tests {
 
     #[test]
     fn test_array_type_aligned_and_offset_elements() -> SimpleResult<()> {
-        let data = b"xAxxBxxxCxxxDxxx".to_vec();
+        let data = b"xAxxxBxxxCxxxDxx".to_vec();
         let offset = Offset::Dynamic(Context::new(&data).at(1));
 
         let a = H2Array::new(4, ASCII::new_aligned(Alignment::Loose(4), StrictASCII::Permissive))?;
         assert_eq!(true, a.is_static());
-        assert_eq!(15,  a.actual_size(offset)?);
-        assert_eq!(15, a.aligned_size(offset)?);
-        assert_eq!(1..16,  a.actual_range(offset)?);
-        assert_eq!(1..16, a.aligned_range(offset)?);
+        assert_eq!(16,  a.actual_size(offset)?);
+        assert_eq!(16, a.aligned_size(offset)?);
+        assert_eq!(1..17,  a.actual_range(offset)?);
+        assert_eq!(1..17, a.aligned_range(offset)?);
         assert_eq!("[A, B, C, D]", a.to_string(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
         let r = a.resolve(offset)?;
-        assert_eq!(15, r.actual_size());
-        assert_eq!(15, r.aligned_size());
-        assert_eq!(1..16, r.actual_range);
-        assert_eq!(1..16, r.aligned_range);
+        assert_eq!(16, r.actual_size());
+        assert_eq!(16, r.aligned_size());
+        assert_eq!(1..17, r.actual_range);
+        assert_eq!(1..17, r.aligned_range);
         assert_eq!("[A, B, C, D]", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
         // Check the resolved children ranges
         assert_eq!(1..2,   r.children[0].actual_range);
-        assert_eq!(4..5,   r.children[1].actual_range);
-        assert_eq!(8..9,   r.children[2].actual_range);
-        assert_eq!(12..13, r.children[3].actual_range);
+        assert_eq!(5..6,   r.children[1].actual_range);
+        assert_eq!(9..10,  r.children[2].actual_range);
+        assert_eq!(13..14, r.children[3].actual_range);
 
         // Make sure the aligned range is right
-        assert_eq!(1..4,   r.children[0].aligned_range);
-        assert_eq!(4..8,   r.children[1].aligned_range);
-        assert_eq!(8..12,  r.children[2].aligned_range);
-        assert_eq!(12..16, r.children[3].aligned_range);
+        assert_eq!(1..5,   r.children[0].aligned_range);
+        assert_eq!(5..9,   r.children[1].aligned_range);
+        assert_eq!(9..13,  r.children[2].aligned_range);
+        assert_eq!(13..17, r.children[3].aligned_range);
 
         // Check the resolved children values
         assert_eq!("A", r.children[0].value);
