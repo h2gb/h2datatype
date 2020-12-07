@@ -15,3 +15,6 @@ pub use character::Character;
 
 mod utf16;
 pub use utf16::UTF16;
+
+mod utf32;
+pub use utf32::UTF32;

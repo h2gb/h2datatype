@@ -15,6 +15,7 @@ pub enum H2Types {
     IPv4(IPv4),
     IPv6(IPv6),
     UTF16(UTF16),
+    UTF32(UTF32),
 
     // Complex
     H2Array(H2Array),
