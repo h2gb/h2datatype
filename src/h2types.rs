@@ -9,11 +9,11 @@ use crate::complex_type::*;
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum H2Types {
     // Basic
-    // H2Number(H2Number),
-    // H2Pointer(H2Pointer),
+    H2Number(H2Number),
+    H2Pointer(H2Pointer),
     Character(Character),
-    // IPv4(IPv4),
-    // IPv6(IPv6),
+    IPv4(IPv4),
+    IPv6(IPv6),
     // Unicode(Unicode),
 
     // Complex

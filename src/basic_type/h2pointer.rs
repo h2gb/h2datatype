@@ -36,7 +36,7 @@ impl H2TypeTrait for H2Pointer {
         true
     }
 
-    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
+    fn actual_size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(self.definition.size())
     }
 
@@ -61,14 +61,11 @@ impl H2TypeTrait for H2Pointer {
     }
 
     fn related(&self, offset: Offset) -> SimpleResult<Vec<(u64, H2Type)>> {
-        match offset {
-            Offset::Static(_) => bail!("Cannot get related statically"),
-            Offset::Dynamic(context) => {
-                Ok(vec![
-                    (self.definition.to_u64(context)?, *self.target_type.clone())
-                ])
-            }
-        }
+        let context = offset.get_dynamic()?;
+
+        Ok(vec![
+            (self.definition.to_u64(context)?, *self.target_type.clone())
+        ])
     }
 }
 

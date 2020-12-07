@@ -24,11 +24,11 @@ impl H2Type {
     fn field_type(&self) -> &dyn H2TypeTrait {
         match &self.field {
             // Basic
-            // H2Types::H2Number(t)  => t,
-            // H2Types::H2Pointer(t) => t,
+            H2Types::H2Number(t)  => t,
+            H2Types::H2Pointer(t) => t,
             H2Types::Character(t) => t,
-            // H2Types::IPv4(t)      => t,
-            // H2Types::IPv6(t)      => t,
+            H2Types::IPv4(t)      => t,
+            H2Types::IPv6(t)      => t,
             // H2Types::Unicode(t)   => t,
 
             // Complex

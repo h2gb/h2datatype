@@ -33,7 +33,7 @@ impl H2TypeTrait for H2Number {
         true
     }
 
-    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
+    fn actual_size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(self.definition.size())
     }
 

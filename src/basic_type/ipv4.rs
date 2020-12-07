@@ -32,7 +32,7 @@ impl H2TypeTrait for IPv4 {
         true
     }
 
-    fn size(&self, _offset: Offset) -> SimpleResult<u64> {
+    fn actual_size(&self, _offset: Offset) -> SimpleResult<u64> {
         Ok(4)
     }
 

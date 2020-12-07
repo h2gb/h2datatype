@@ -11,7 +11,6 @@ use crate::H2Type;
 pub struct ResolvedType {
     pub actual_range: Range<u64>,
     pub aligned_range: Range<u64>,
-    //pub field_type: H2Type,
 
     pub field_name: Option<String>,
     pub value: String,
