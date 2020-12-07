@@ -11,7 +11,7 @@ mod ipv6;
 pub use ipv6::IPv6;
 
 mod ascii;
-pub use ascii::ASCII;
+pub use ascii::{ASCII, StrictASCII};
 
 mod utf8;
 pub use utf8::UTF8;

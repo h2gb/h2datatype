@@ -1,4 +1,4 @@
-use simple_error::SimpleResult;
+use simple_error::{bail, SimpleResult};
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
@@ -6,20 +6,30 @@ use serde::{Serialize, Deserialize};
 use crate::{H2Type, H2Types, H2TypeTrait, Offset};
 use crate::alignment::Alignment;
 
+/// Configure whether invalid ASCII characters are an error or just replaced
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
+pub enum StrictASCII {
+    Strict,
+    Permissive,
+}
+
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct ASCII {
+    strict: StrictASCII,
 }
 
 // TODO: Add strict / loose options
 impl ASCII {
-    pub fn new_aligned(alignment: Alignment) -> H2Type {
+    pub fn new_aligned(alignment: Alignment, strict: StrictASCII) -> H2Type {
         H2Type::new(alignment, H2Types::ASCII(Self {
+            strict: strict,
         }))
     }
 
-    pub fn new() -> H2Type {
-        Self::new_aligned(Alignment::None)
+    pub fn new(strict: StrictASCII) -> H2Type {
+        Self::new_aligned(Alignment::None, strict)
     }
 }
 
@@ -40,7 +50,10 @@ impl H2TypeTrait for ASCII {
 
                 match number > 0x1F && number < 0x7F {
                     true  => Ok((number as char).to_string()),
-                    false => Ok("<invalid>".to_string()),
+                    false => match self.strict {
+                        StrictASCII::Strict     => bail!("Invalid ASCII character: {:#x}", number),
+                        StrictASCII::Permissive => Ok("�".to_string()),
+                    },
                 }
             }
         }
@@ -55,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_ascii_type_unaligned() -> SimpleResult<()> {
-        let c = ASCII::new();
+        let c = ASCII::new(StrictASCII::Permissive);
 
         assert_eq!(true, c.is_static());
 
@@ -76,7 +89,7 @@ mod tests {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = ASCII::new().resolve(offset)?;
+        let r = ASCII::new(StrictASCII::Permissive).resolve(offset)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 
@@ -92,7 +105,7 @@ mod tests {
 
     #[test]
     fn test_ascii_type_aligned() -> SimpleResult<()> {
-        let c = ASCII::new_aligned(Alignment::Loose(4));
+        let c = ASCII::new_aligned(Alignment::Loose(4), StrictASCII::Permissive);
 
         assert_eq!(true, c.is_static());
 
@@ -113,7 +126,7 @@ mod tests {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = ASCII::new_aligned(Alignment::Loose(4)).resolve(offset)?;
+        let r = ASCII::new_aligned(Alignment::Loose(4), StrictASCII::Permissive).resolve(offset)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 
@@ -128,19 +141,40 @@ mod tests {
     }
 
     #[test]
-    fn test_ascii_to_string() -> SimpleResult<()> {
+    fn test_ascii_to_string_permissive() -> SimpleResult<()> {
         let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
+        let t = ASCII::new(StrictASCII::Permissive);
 
-        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(0))?);
-        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(1))?);
-        assert_eq!(" ",         ASCII::new().to_string(offset.at(2))?);
-        assert_eq!("A",         ASCII::new().to_string(offset.at(3))?);
-        assert_eq!("B",         ASCII::new().to_string(offset.at(4))?);
-        assert_eq!("~",         ASCII::new().to_string(offset.at(5))?);
-        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(6))?);
-        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(7))?);
-        assert_eq!("<invalid>", ASCII::new().to_string(offset.at(8))?);
+        assert_eq!("�", t.to_string(offset.at(0))?);
+        assert_eq!("�", t.to_string(offset.at(1))?);
+        assert_eq!(" ", t.to_string(offset.at(2))?);
+        assert_eq!("A", t.to_string(offset.at(3))?);
+        assert_eq!("B", t.to_string(offset.at(4))?);
+        assert_eq!("~", t.to_string(offset.at(5))?);
+        assert_eq!("�", t.to_string(offset.at(6))?);
+        assert_eq!("�", t.to_string(offset.at(7))?);
+        assert_eq!("�", t.to_string(offset.at(8))?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ascii_to_string_strict() -> SimpleResult<()> {
+        let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+        let t = ASCII::new(StrictASCII::Strict);
+
+        assert!(t.to_string(offset.at(0)).is_err());
+        assert!(t.to_string(offset.at(1)).is_err());
+        assert!(t.to_string(offset.at(6)).is_err());
+        assert!(t.to_string(offset.at(7)).is_err());
+        assert!(t.to_string(offset.at(8)).is_err());
+
+        assert_eq!(" ", t.to_string(offset.at(2))?);
+        assert_eq!("A", t.to_string(offset.at(3))?);
+        assert_eq!("B", t.to_string(offset.at(4))?);
+        assert_eq!("~", t.to_string(offset.at(5))?);
 
         Ok(())
     }
