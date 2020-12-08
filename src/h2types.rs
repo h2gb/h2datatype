@@ -22,6 +22,7 @@ pub enum H2Types {
 
     // Complex
     H2Array(H2Array),
+    H2Enum(H2Enum),
     H2Struct(H2Struct),
 
     // Dynamic

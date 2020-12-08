@@ -1,79 +1,73 @@
-use simple_error::SimpleResult;
+use simple_error::{bail, SimpleResult};
+use std::ops::Range;
 use std::cmp;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use sized_number::Context;
-
-use crate::helpers;
-use crate::{StaticType, ResolvedType};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset};
+use crate::alignment::Alignment;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Enum {
     // An array of strings and types (which might be other types)
-    options: Vec<(String, StaticType)>,
-    byte_alignment: Option<u64>,
-}
-
-impl From<H2Enum> for StaticType {
-    fn from(o: H2Enum) -> StaticType {
-        StaticType::from(StaticType::H2Enum(o))
-    }
+    variants: Vec<(String, H2Type)>,
 }
 
 impl H2Enum {
-    pub fn new(options: Vec<(String, StaticType)>) -> Self {
-        Self {
-            options: options,
-            byte_alignment: None,
+    pub fn new_aligned(alignment: Alignment, variants: Vec<(String, H2Type)>) -> SimpleResult<H2Type> {
+        if variants.len() == 0 {
+            bail!("Enums must have at least one variant");
         }
+
+        Ok(H2Type::new(alignment, H2Types::H2Enum(Self {
+            variants: variants,
+        })))
     }
 
-    pub fn new_aligned(byte_alignment: u64, options: Vec<(String, StaticType)>) -> Self {
-        Self {
-            options: options,
-            byte_alignment: Some(byte_alignment),
-        }
+    pub fn new(variants: Vec<(String, H2Type)>) -> SimpleResult<H2Type> {
+        Self::new_aligned(Alignment::None, variants)
+    }
+}
+
+impl H2TypeTrait for H2Enum {
+    fn is_static(&self) -> bool {
+        // Loop over each field - return an object as soon as is_static() is
+        // false
+        self.variants.iter().find(|(_, t)| {
+            t.is_static() == false
+        }).is_none()
     }
 
-    pub fn partially_resolve(&self, start: u64) -> Vec<ResolvedType> {
-        let mut result = vec![];
-
-        for (name, field_type) in self.options.iter() {
-            result.push(ResolvedType {
-                offset: start..(start + field_type.size()),
-                field_name: Some(name.clone()),
-                field_type: field_type.clone(),
-            });
-        }
-
-        result
+    // We must implement this, because unlike others the end isn't necessarily
+    // the end of the last child
+    fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
+        // Check each variant's length, saving the longest
+        self.variants.iter().try_fold(0, |sum, (_, t)| {
+            // This returns the bigger of the current value or the new value
+            Ok(cmp::max(t.aligned_size(offset)?, sum))
+        })
     }
 
-    pub fn size(&self) -> u64 {
-        let max_size = self.options.iter().fold(0, |sum, (_, t)| {
-            // Only change if it's bigger
-            cmp::max(t.size(), sum)
-        });
-
-        // Align, if needed
-        match self.byte_alignment {
-            Some(a) => helpers::round_up(max_size, a),
-            None    => max_size,
-        }
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<H2Type>> {
+        Ok(self.variants.iter().map(|(_name, field_type)| {
+            field_type.clone()
+        }).collect())
     }
 
-    pub fn to_string(&self, context: Context) -> SimpleResult<String> {
-        let mut strings: Vec<String> = vec![];
+    // We must implement this ourselves, because all children will start at the
+    // offset
+    fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, H2Type)>> {
+        self.variants.iter().map(|(_name, field_type)| {
+            Ok((field_type.aligned_range(offset)?, field_type.clone()))
+        }).collect::<SimpleResult<Vec<(Range<u64>, H2Type)>>>()
+    }
 
-        for r in self.partially_resolve(context.position()) {
-            strings.push(format!("{}: {}",
-                r.field_name.unwrap_or("unknown".to_string()),
-                r.field_type.to_string(context.at(r.offset.start))?
-            ));
-        }
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+        let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, child)| {
+            child.to_string(offset.at(range.start))
+        }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(format!("{{ {} }}", strings.join(" | ")))
     }
@@ -85,78 +79,78 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::basic_type::H2Number;
+    use crate::basic_type::{H2Number, ASCII, StrictASCII};
+    use crate::complex_type::H2Array;
 
     #[test]
     fn test_enum() -> SimpleResult<()> {
-        let data = b"ABCD".to_vec();
+        let data = b"xxxABCDEFGHIJKLMNOP".to_vec();
+        let offset = Offset::Dynamic(Context::new_at(&data, 3));
 
-        let e: StaticType = H2Enum::new(vec![
+        let e = H2Enum::new_aligned(Alignment::Loose(16), vec![
             (
-                "field_u32".to_string(),
-                H2Number::new(
-                    SizedDefinition::U32(Endian::Big),
-                    SizedDisplay::Hex(Default::default()),
-                ).into()
-            ),
-            (
-                "field_u16".to_string(),
-                H2Number::new(
+                "u16".to_string(),
+                H2Number::new_aligned(
+                    Alignment::Loose(3),
                     SizedDefinition::U16(Endian::Big),
                     SizedDisplay::Hex(Default::default()),
-                ).into()
+                )
             ),
             (
-                "field_u8".to_string(),
-                H2Number::new(
-                    SizedDefinition::U8,
-                    SizedDisplay::Hex(Default::default()),
-                ).into()
-            ),
-            (
-                "field_u8_octal".to_string(),
-                H2Number::new(
-                    SizedDefinition::U8,
-                    SizedDisplay::Octal(Default::default()),
-                ).into()
-            ),
-            (
-                "field_u8_decimal".to_string(),
-                H2Number::new(
-                    SizedDefinition::U8,
-                    SizedDisplay::Decimal,
-                ).into()
-            ),
-            (
-                "field_u32_little".to_string(),
+                "u32".to_string(),
                 H2Number::new(
                     SizedDefinition::U32(Endian::Little),
                     SizedDisplay::Hex(Default::default()),
-                ).into()
+                )
             ),
-        ]).into();
+            (
+                "array".to_string(),
+                H2Array::new_aligned(
+                    Alignment::Loose(12),
+                    8,
+                    ASCII::new(StrictASCII::Permissive),
+                )?,
+            ),
+            (
+                "u8".to_string(),
+                H2Number::new_aligned(
+                    Alignment::Loose(4),
+                    SizedDefinition::U8,
+                    SizedDisplay::Octal(Default::default()),
+                )
+            ),
+        ])?;
 
-        // Size will be the longest field, which is 32-bit
-        assert_eq!(4, e.size());
+        // Check the basics
+        assert_eq!(true, e.is_static());
+        assert_eq!(12, e.actual_size(offset)?);
+        assert_eq!(16, e.aligned_size(offset)?);
+        assert_eq!(3..15, e.actual_range(offset)?);
+        assert_eq!(3..19, e.aligned_range(offset)?);
+        assert_eq!("{ 0x4142 | 0x44434241 | [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | 0o101 }", e.to_string(offset)?);
+        assert_eq!(0, e.related(offset)?.len());
+        assert_eq!(4, e.children(offset)?.len());
 
-        let r = e.resolve_full(0, None);
-        assert_eq!(0..4, r[0].offset);
-        assert_eq!("0x41424344", r[0].to_string(Context::new(&data))?);
+        // Check the resolved version
+        let r = e.resolve(offset)?;
+        assert_eq!(12, r.actual_size());
+        assert_eq!(16, r.aligned_size());
+        assert_eq!(3..15, r.actual_range);
+        assert_eq!(3..19, r.aligned_range);
+        assert_eq!("{ 0x4142 | 0x44434241 | [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | 0o101 }", r.value);
+        assert_eq!(0, r.related.len());
+        assert_eq!(4, r.children.len());
 
-        assert_eq!(0..2, r[1].offset);
-        assert_eq!("0x4142", r[1].to_string(Context::new(&data))?);
+        // Check the resolved children ranges
+        assert_eq!(3..5,  r.children[0].actual_range);
+        assert_eq!(3..7,  r.children[1].actual_range);
+        assert_eq!(3..11, r.children[2].actual_range);
+        assert_eq!(3..4,  r.children[3].actual_range);
 
-        assert_eq!(0..1, r[2].offset);
-        assert_eq!("0x41", r[2].to_string(Context::new(&data))?);
-
-        assert_eq!(0..1, r[3].offset);
-        assert_eq!("0o101", r[3].to_string(Context::new(&data))?);
-
-        assert_eq!(0..1, r[4].offset);
-        assert_eq!("65", r[4].to_string(Context::new(&data))?);
-
-        assert_eq!(0..4, r[5].offset);
-        assert_eq!("0x44434241", r[5].to_string(Context::new(&data))?);
+        assert_eq!(3..6,  r.children[0].aligned_range);
+        assert_eq!(3..7,  r.children[1].aligned_range);
+        assert_eq!(3..15, r.children[2].aligned_range);
+        assert_eq!(3..7,  r.children[3].aligned_range);
 
         Ok(())
     }

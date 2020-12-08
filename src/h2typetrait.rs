@@ -13,6 +13,9 @@ pub trait H2TypeTrait {
     // end of the last and subtracts the start of the first. That can be really
     // slow, and only works with children, so implementations will frequently
     // want their own, I think.
+    //
+    // This also assumes that the last child has the last address. That doesn't
+    // work for, say, H2Enum
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         let children = self.children_with_range(offset)?;
 

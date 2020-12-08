@@ -68,7 +68,7 @@ impl H2TypeTrait for H2Struct {
             child.to_string(offset.at(range.start))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
-        Ok(format!("[{}]", strings.join(", ")))
+        Ok(format!("{{ {} }}", strings.join(", ")))
     }
 }
 
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
         // TODO: This needs field names
-        assert_eq!("[0x00010203, 0x0001, 0o17, 202182159]", t.to_string(offset)?);
+        assert_eq!("{ 0x00010203, 0x0001, 0o17, 202182159 }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
 
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
         // TODO: This needs field names
-        assert_eq!("[0x00010203, 0x0001, 0o17, 202182159]", r.value);
+        assert_eq!("{ 0x00010203, 0x0001, 0o17, 202182159 }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -150,7 +150,7 @@ mod tests {
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
         // TODO: This needs field names
-        assert_eq!("[Number, Number, Number, Number]", t.to_string(offset)?);
+        assert_eq!("{ Number, Number, Number, Number }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
 
@@ -161,7 +161,7 @@ mod tests {
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
         // TODO: This needs field names
-        assert_eq!("[Number, Number, Number, Number]", r.value);
+        assert_eq!("{ Number, Number, Number, Number }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -222,7 +222,7 @@ mod tests {
         assert_eq!(3..23, t.actual_range(offset)?);
         assert_eq!(3..23, t.aligned_range(offset)?);
         // TODO: This needs field names
-        assert_eq!("[0x0001, [0x41, 0x42, 0x4343, ['a', 'b', 'c', 'd', 'e']], 127.0.0.1]", t.to_string(offset)?);
+        assert_eq!("{ 0x0001, { 0x41, 0x42, 0x4343, [ 'a', 'b', 'c', 'd', 'e' ] }, 127.0.0.1 }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(3, t.children(offset)?.len());
 
@@ -233,7 +233,7 @@ mod tests {
         assert_eq!(3..23, r.actual_range);
         assert_eq!(3..23, r.aligned_range);
         // TODO: This needs field names
-        assert_eq!("[0x0001, [0x41, 0x42, 0x4343, ['a', 'b', 'c', 'd', 'e']], 127.0.0.1]", r.value);
+        assert_eq!("{ 0x0001, { 0x41, 0x42, 0x4343, [ 'a', 'b', 'c', 'd', 'e' ] }, 127.0.0.1 }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(3, r.children.len());
 
@@ -246,7 +246,7 @@ mod tests {
         // Check the second child
         assert_eq!(12, r.children[1].actual_size());
         assert_eq!(12, r.children[1].aligned_size());
-        assert_eq!("[0x41, 0x42, 0x4343, ['a', 'b', 'c', 'd', 'e']]", r.children[1].value);
+        assert_eq!("{ 0x41, 0x42, 0x4343, [ 'a', 'b', 'c', 'd', 'e' ] }", r.children[1].value);
         assert_eq!(4, r.children[1].children.len());
 
         // Check the character array
