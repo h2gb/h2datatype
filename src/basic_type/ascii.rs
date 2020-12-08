@@ -89,7 +89,7 @@ mod tests {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = ASCII::new(StrictASCII::Permissive).resolve(offset)?;
+        let r = ASCII::new(StrictASCII::Permissive).resolve(offset, None)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 
@@ -126,7 +126,7 @@ mod tests {
         let data = b"\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let r = ASCII::new_aligned(Alignment::Loose(4), StrictASCII::Permissive).resolve(offset)?;
+        let r = ASCII::new_aligned(Alignment::Loose(4), StrictASCII::Permissive).resolve(offset, None)?;
         assert_eq!(1, r.actual_size());
         assert_eq!(0..1, r.actual_range);
 

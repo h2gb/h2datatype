@@ -82,11 +82,11 @@ impl H2Type {
         self.field_type().related(offset)
     }
 
-    pub fn children(&self, offset: Offset) -> SimpleResult<Vec<H2Type>> {
+    pub fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         self.field_type().children(offset)
     }
 
-    pub fn resolve(&self, offset: Offset) -> SimpleResult<ResolvedType> {
-        self.field_type().resolve(offset, self.alignment, None)
+    pub fn resolve(&self, offset: Offset, name: Option<String>) -> SimpleResult<ResolvedType> {
+        self.field_type().resolve(offset, self.alignment, name)
     }
 }

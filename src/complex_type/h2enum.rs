@@ -50,23 +50,23 @@ impl H2TypeTrait for H2Enum {
         })
     }
 
-    fn children(&self, _offset: Offset) -> SimpleResult<Vec<H2Type>> {
-        Ok(self.variants.iter().map(|(_name, field_type)| {
-            field_type.clone()
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
+        Ok(self.variants.iter().map(|(name, field_type)| {
+            (Some(name.clone()), field_type.clone())
         }).collect())
     }
 
     // We must implement this ourselves, because all children will start at the
     // offset
-    fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, H2Type)>> {
-        self.variants.iter().map(|(_name, field_type)| {
-            Ok((field_type.aligned_range(offset)?, field_type.clone()))
-        }).collect::<SimpleResult<Vec<(Range<u64>, H2Type)>>>()
+    fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, Option<String>, H2Type)>> {
+        self.variants.iter().map(|(name, field_type)| {
+            Ok((field_type.aligned_range(offset)?, Some(name.clone()), field_type.clone()))
+        }).collect::<SimpleResult<Vec<_>>>()
     }
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, child)| {
-            child.to_string(offset.at(range.start))
+        let strings: Vec<String> = self.children_with_range(offset)?.into_iter().map(|(range, name, child)| {
+            Ok(format!("{}: {}", name.unwrap_or("<name unknown>".to_string()), child.to_string(offset.at(range.start))?))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(format!("{{ {} }}", strings.join(" | ")))
@@ -112,7 +112,7 @@ mod tests {
                 )?,
             ),
             (
-                "u8".to_string(),
+                "u8octal".to_string(),
                 H2Number::new_aligned(
                     Alignment::Loose(4),
                     SizedDefinition::U8,
@@ -127,17 +127,17 @@ mod tests {
         assert_eq!(16, e.aligned_size(offset)?);
         assert_eq!(3..15, e.actual_range(offset)?);
         assert_eq!(3..19, e.aligned_range(offset)?);
-        assert_eq!("{ 0x4142 | 0x44434241 | [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | 0o101 }", e.to_string(offset)?);
+        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", e.to_string(offset)?);
         assert_eq!(0, e.related(offset)?.len());
         assert_eq!(4, e.children(offset)?.len());
 
         // Check the resolved version
-        let r = e.resolve(offset)?;
+        let r = e.resolve(offset, None)?;
         assert_eq!(12, r.actual_size());
         assert_eq!(16, r.aligned_size());
         assert_eq!(3..15, r.actual_range);
         assert_eq!(3..19, r.aligned_range);
-        assert_eq!("{ 0x4142 | 0x44434241 | [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | 0o101 }", r.value);
+        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 

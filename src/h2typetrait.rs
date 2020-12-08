@@ -20,13 +20,13 @@ pub trait H2TypeTrait {
         let children = self.children_with_range(offset)?;
 
         let first_range = match children.first() {
-            Some((r, _)) => r,
+            Some((r, _, _)) => r,
             None => bail!("Can't calculate size with no child types"),
         };
 
         // This should never trigger, but just in case...
         let last_range = match children.last() {
-            Some((r, _)) => r,
+            Some((r, _, _)) => r,
             None => bail!("Can't calculate size with no child types"),
         };
 
@@ -64,7 +64,7 @@ pub trait H2TypeTrait {
 
     // Get the children as a vector of abstract H2Type values. This should be
     // implemented by any complex type that has subtypes.
-    fn children(&self, _offset: Offset) -> SimpleResult<Vec<H2Type>> {
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         Ok(vec![])
     }
 
@@ -72,15 +72,15 @@ pub trait H2TypeTrait {
     // size.
     //
     // There should be no need to override this.
-    fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, H2Type)>> {
+    fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, Option<String>, H2Type)>> {
         let mut child_offset = offset;
 
-        self.children(offset)?.iter().map(|child| {
+        self.children(offset)?.into_iter().map(|(name, child)| {
             let range = child.aligned_range(child_offset)?;
 
             child_offset = offset.at(range.end);
 
-            Ok((range, child.clone()))
+            Ok((range, name, child.clone()))
             //// I'm not sure if this is a good idea, but...
             ////
             //// This ensures that the array field starts in the same "place"
@@ -91,7 +91,7 @@ pub trait H2TypeTrait {
             //} else {
             //    start = start + self.field_type.aligned_size(this_offset)?;
             //}
-        }).collect::<SimpleResult<Vec<(Range<u64>, H2Type)>>>()
+        }).collect::<SimpleResult<Vec<_>>>()
     }
 
     // Convert an abstract type to a concrete type. This is used recursively
@@ -105,9 +105,9 @@ pub trait H2TypeTrait {
             value: self.to_string(offset)?,
 
             // Resolve the children here and now
-            children: self.children_with_range(offset)?.iter().map(|(range, child)| {
+            children: self.children_with_range(offset)?.into_iter().map(|(range, name, child)| {
                 // Errors here will be handled by the collect
-                child.resolve(offset.at(range.start))
+                child.resolve(offset.at(range.start), name)
             }).collect::<SimpleResult<Vec<ResolvedType>>>()?,
 
             related: self.related(offset)?,

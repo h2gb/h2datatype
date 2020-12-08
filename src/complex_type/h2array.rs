@@ -39,17 +39,17 @@ impl H2TypeTrait for H2Array {
     //fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
     //}
 
-    fn children(&self, _offset: Offset) -> SimpleResult<Vec<H2Type>> {
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         // Just clone the child type over and over
         Ok((0..self.length).into_iter().map(|_index| {
-            self.field_type.as_ref().clone()
+            (None, self.field_type.as_ref().clone())
         }).collect())
     }
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Because the collect() expects a result, this will end and bubble
         // up errors automatically!
-        let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, child)| {
+        let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, _name, child)| {
             child.to_string(offset.at(range.start))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
-        let r = a.resolve(offset)?;
+        let r = a.resolve(offset, None)?;
         assert_eq!(4, r.actual_size());
         assert_eq!(4, r.aligned_size());
         assert_eq!(0..4, r.actual_range);
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
-        let r = a.resolve(offset)?;
+        let r = a.resolve(offset, None)?;
         assert_eq!(4, r.actual_size());
         assert_eq!(8, r.aligned_size());
         assert_eq!(0..4, r.actual_range);
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
-        let r = a.resolve(offset)?;
+        let r = a.resolve(offset, None)?;
         assert_eq!(16, r.actual_size());
         assert_eq!(16, r.aligned_size());
         assert_eq!(0..16, r.actual_range);
@@ -211,7 +211,7 @@ mod tests {
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
-        let r = a.resolve(offset)?;
+        let r = a.resolve(offset, None)?;
         assert_eq!(16, r.actual_size());
         assert_eq!(20, r.aligned_size());
         assert_eq!(0..16, r.actual_range);
@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(4, a.children(offset)?.len());
 
         // Check the resolved version
-        let r = a.resolve(offset)?;
+        let r = a.resolve(offset, None)?;
         assert_eq!(16, r.actual_size());
         assert_eq!(16, r.aligned_size());
         assert_eq!(1..17, r.actual_range);
