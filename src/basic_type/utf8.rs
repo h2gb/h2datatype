@@ -36,7 +36,7 @@ impl H2TypeTrait for UTF8 {
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         let context = offset.get_dynamic()?;
 
-        Ok(context.read_utf8()?.1.to_string())
+        Ok(format!("'{}'", context.read_utf8()?.1))
     }
 }
 
@@ -69,13 +69,13 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("A", UTF8::new().to_string(offset.at(0))?);
-        assert_eq!("B", UTF8::new().to_string(offset.at(1))?);
-        assert_eq!("❄", UTF8::new().to_string(offset.at(2))?);
-        assert_eq!("☢", UTF8::new().to_string(offset.at(5))?);
-        assert_eq!("𝄞", UTF8::new().to_string(offset.at(8))?);
-        assert_eq!("😈", UTF8::new().to_string(offset.at(12))?);
-        assert_eq!("÷", UTF8::new().to_string(offset.at(16))?);
+        assert_eq!("'A'", UTF8::new().to_string(offset.at(0))?);
+        assert_eq!("'B'", UTF8::new().to_string(offset.at(1))?);
+        assert_eq!("'❄'", UTF8::new().to_string(offset.at(2))?);
+        assert_eq!("'☢'", UTF8::new().to_string(offset.at(5))?);
+        assert_eq!("'𝄞'", UTF8::new().to_string(offset.at(8))?);
+        assert_eq!("'😈'", UTF8::new().to_string(offset.at(12))?);
+        assert_eq!("'÷'", UTF8::new().to_string(offset.at(16))?);
 
         Ok(())
     }

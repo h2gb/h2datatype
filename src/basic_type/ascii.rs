@@ -42,7 +42,6 @@ impl H2TypeTrait for ASCII {
         Ok(1)
     }
 
-    // TODO: Add '' around the result
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => Ok("ASCII".to_string()),
@@ -50,10 +49,10 @@ impl H2TypeTrait for ASCII {
                 let number = context.read_u8()?;
 
                 match number > 0x1F && number < 0x7F {
-                    true  => Ok((number as char).to_string()),
+                    true  => Ok(format!("'{}'", (number as char))),
                     false => match self.strict {
                         StrictASCII::Strict     => bail!("Invalid ASCII character: {:#x}", number),
-                        StrictASCII::Permissive => Ok("�".to_string()),
+                        StrictASCII::Permissive => Ok("'�'".to_string()),
                     },
                 }
             }
@@ -99,7 +98,7 @@ mod tests {
 
         assert_eq!(0, r.children.len());
         assert_eq!(0, r.related.len());
-        assert_eq!("A", r.value);
+        assert_eq!("'A'", r.value);
 
         Ok(())
     }
@@ -136,7 +135,7 @@ mod tests {
 
         assert_eq!(0, r.children.len());
         assert_eq!(0, r.related.len());
-        assert_eq!("A", r.value);
+        assert_eq!("'A'", r.value);
 
         Ok(())
     }
@@ -147,15 +146,15 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
         let t = ASCII::new(StrictASCII::Permissive);
 
-        assert_eq!("�", t.to_string(offset.at(0))?);
-        assert_eq!("�", t.to_string(offset.at(1))?);
-        assert_eq!(" ", t.to_string(offset.at(2))?);
-        assert_eq!("A", t.to_string(offset.at(3))?);
-        assert_eq!("B", t.to_string(offset.at(4))?);
-        assert_eq!("~", t.to_string(offset.at(5))?);
-        assert_eq!("�", t.to_string(offset.at(6))?);
-        assert_eq!("�", t.to_string(offset.at(7))?);
-        assert_eq!("�", t.to_string(offset.at(8))?);
+        assert_eq!("'�'", t.to_string(offset.at(0))?);
+        assert_eq!("'�'", t.to_string(offset.at(1))?);
+        assert_eq!("' '", t.to_string(offset.at(2))?);
+        assert_eq!("'A'", t.to_string(offset.at(3))?);
+        assert_eq!("'B'", t.to_string(offset.at(4))?);
+        assert_eq!("'~'", t.to_string(offset.at(5))?);
+        assert_eq!("'�'", t.to_string(offset.at(6))?);
+        assert_eq!("'�'", t.to_string(offset.at(7))?);
+        assert_eq!("'�'", t.to_string(offset.at(8))?);
 
         Ok(())
     }
@@ -172,10 +171,10 @@ mod tests {
         assert!(t.to_string(offset.at(7)).is_err());
         assert!(t.to_string(offset.at(8)).is_err());
 
-        assert_eq!(" ", t.to_string(offset.at(2))?);
-        assert_eq!("A", t.to_string(offset.at(3))?);
-        assert_eq!("B", t.to_string(offset.at(4))?);
-        assert_eq!("~", t.to_string(offset.at(5))?);
+        assert_eq!("' '", t.to_string(offset.at(2))?);
+        assert_eq!("'A'", t.to_string(offset.at(3))?);
+        assert_eq!("'B'", t.to_string(offset.at(4))?);
+        assert_eq!("'~'", t.to_string(offset.at(5))?);
 
         Ok(())
     }

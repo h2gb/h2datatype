@@ -38,7 +38,7 @@ impl H2TypeTrait for UTF32 {
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         let context = offset.get_dynamic()?;
 
-        Ok(context.read_utf32(self.endian)?.to_string())
+        Ok(format!("'{}'", context.read_utf32(self.endian)?))
     }
 }
 
@@ -53,12 +53,12 @@ mod tests {
         let data = b"\x00\x00\x00\x41\x00\x00\x00\x42\x00\x00\x27\x44\x00\x00\x26\x22\x00\x01\xD1\x1E\x00\x01\xF6\x08".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("A", UTF32::new(Endian::Big).to_string(offset.at(0))?);
-        assert_eq!("B", UTF32::new(Endian::Big).to_string(offset.at(4))?);
-        assert_eq!("❄", UTF32::new(Endian::Big).to_string(offset.at(8))?);
-        assert_eq!("☢", UTF32::new(Endian::Big).to_string(offset.at(12))?);
-        assert_eq!("𝄞", UTF32::new(Endian::Big).to_string(offset.at(16))?);
-        assert_eq!("😈", UTF32::new(Endian::Big).to_string(offset.at(20))?);
+        assert_eq!("'A'", UTF32::new(Endian::Big).to_string(offset.at(0))?);
+        assert_eq!("'B'", UTF32::new(Endian::Big).to_string(offset.at(4))?);
+        assert_eq!("'❄'", UTF32::new(Endian::Big).to_string(offset.at(8))?);
+        assert_eq!("'☢'", UTF32::new(Endian::Big).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", UTF32::new(Endian::Big).to_string(offset.at(16))?);
+        assert_eq!("'😈'", UTF32::new(Endian::Big).to_string(offset.at(20))?);
 
         Ok(())
     }
@@ -68,12 +68,12 @@ mod tests {
         let data = b"\x41\x00\x00\x00\x42\x00\x00\x00\x44\x27\x00\x00\x22\x26\x00\x00\x1E\xd1\x01\x00\x08\xf6\x01\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("A", UTF32::new(Endian::Little).to_string(offset.at(0))?);
-        assert_eq!("B", UTF32::new(Endian::Little).to_string(offset.at(4))?);
-        assert_eq!("❄", UTF32::new(Endian::Little).to_string(offset.at(8))?);
-        assert_eq!("☢", UTF32::new(Endian::Little).to_string(offset.at(12))?);
-        assert_eq!("𝄞", UTF32::new(Endian::Little).to_string(offset.at(16))?);
-        assert_eq!("😈", UTF32::new(Endian::Little).to_string(offset.at(20))?);
+        assert_eq!("'A'", UTF32::new(Endian::Little).to_string(offset.at(0))?);
+        assert_eq!("'B'", UTF32::new(Endian::Little).to_string(offset.at(4))?);
+        assert_eq!("'❄'", UTF32::new(Endian::Little).to_string(offset.at(8))?);
+        assert_eq!("'☢'", UTF32::new(Endian::Little).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", UTF32::new(Endian::Little).to_string(offset.at(16))?);
+        assert_eq!("'😈'", UTF32::new(Endian::Little).to_string(offset.at(20))?);
 
         Ok(())
     }

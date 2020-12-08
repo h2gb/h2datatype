@@ -40,7 +40,7 @@ impl H2TypeTrait for UTF16 {
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         let context = offset.get_dynamic()?;
 
-        Ok(context.read_utf16(self.endian)?.1.to_string())
+        Ok(format!("'{}'", context.read_utf16(self.endian)?.1))
     }
 }
 
@@ -76,14 +76,14 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("A", UTF16::new(Endian::Big).to_string(offset.at(0))?);
-        assert_eq!("B", UTF16::new(Endian::Big).to_string(offset.at(2))?);
-        assert_eq!("❄", UTF16::new(Endian::Big).to_string(offset.at(4))?);
-        assert_eq!("☢", UTF16::new(Endian::Big).to_string(offset.at(6))?);
+        assert_eq!("'A'", UTF16::new(Endian::Big).to_string(offset.at(0))?);
+        assert_eq!("'B'", UTF16::new(Endian::Big).to_string(offset.at(2))?);
+        assert_eq!("'❄'", UTF16::new(Endian::Big).to_string(offset.at(4))?);
+        assert_eq!("'☢'", UTF16::new(Endian::Big).to_string(offset.at(6))?);
 
         // Double
-        assert_eq!("𝄞", UTF16::new(Endian::Big).to_string(offset.at(8))?);
-        assert_eq!("😈", UTF16::new(Endian::Big).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", UTF16::new(Endian::Big).to_string(offset.at(8))?);
+        assert_eq!("'😈'", UTF16::new(Endian::Big).to_string(offset.at(12))?);
 
         Ok(())
     }
@@ -95,14 +95,14 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("A", UTF16::new(Endian::Little).to_string(offset.at(0))?);
-        assert_eq!("B", UTF16::new(Endian::Little).to_string(offset.at(2))?);
-        assert_eq!("❄", UTF16::new(Endian::Little).to_string(offset.at(4))?);
-        assert_eq!("☢", UTF16::new(Endian::Little).to_string(offset.at(6))?);
+        assert_eq!("'A'", UTF16::new(Endian::Little).to_string(offset.at(0))?);
+        assert_eq!("'B'", UTF16::new(Endian::Little).to_string(offset.at(2))?);
+        assert_eq!("'❄'", UTF16::new(Endian::Little).to_string(offset.at(4))?);
+        assert_eq!("'☢'", UTF16::new(Endian::Little).to_string(offset.at(6))?);
 
         // Double
-        assert_eq!("𝄞", UTF16::new(Endian::Little).to_string(offset.at(8))?);
-        assert_eq!("😈", UTF16::new(Endian::Little).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", UTF16::new(Endian::Little).to_string(offset.at(8))?);
+        assert_eq!("'😈'", UTF16::new(Endian::Little).to_string(offset.at(12))?);
 
         Ok(())
     }
