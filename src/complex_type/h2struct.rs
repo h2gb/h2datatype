@@ -14,13 +14,17 @@ pub struct H2Struct {
 
 impl H2Struct {
     // TODO: We need to prevent zero-length arrays
-    pub fn new_aligned(alignment: Alignment, fields: Vec<(String, H2Type)>) -> H2Type {
-        H2Type::new(alignment, H2Types::H2Struct(Self {
+    pub fn new_aligned(alignment: Alignment, fields: Vec<(String, H2Type)>) -> SimpleResult<H2Type> {
+        if fields.len() == 0 {
+            bail!("Structs must contain at least one field");
+        }
+
+        Ok(H2Type::new(alignment, H2Types::H2Struct(Self {
             fields: fields
-        }))
+        })))
     }
 
-    pub fn new(fields: Vec<(String, H2Type)>) -> H2Type {
+    pub fn new(fields: Vec<(String, H2Type)>) -> SimpleResult<H2Type> {
         Self::new_aligned(Alignment::None, fields)
     }
 }
@@ -28,54 +32,43 @@ impl H2Struct {
 impl H2TypeTrait for H2Struct {
     // Is the size known ahead of time?
     fn is_static(&self) -> bool {
-        // Loop over each field
-        self.fields.iter().find(|(_, t)|
-            // Stop at the first non-static field
+        // Loop over each field - return an object as soon as is_static() is
+        // false
+        self.fields.iter().find(|(_, t)| {
             t.is_static() == false
-        ).is_some()
+        }).is_none()
     }
 
-    fn size(&self, offset: Offset) -> SimpleResult<u64> {
-        let resolved = self.resolve_partial(offset)?;
+    // I think the default implementation will work fine
+    // fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
+    //     let resolved = self.resolve_partial(offset)?;
 
-        if let Some(first) = resolved.first() {
-            if let Some(last) = resolved.last() {
-                return Ok(last.aligned_range.end - first.aligned_range.start);
-            } else {
-                bail!("No elements");
-            }
-        } else {
-            bail!("No elements");
-        }
-    }
+    //     if let Some(first) = resolved.first() {
+    //         if let Some(last) = resolved.last() {
+    //             return Ok(last.aligned_range.end - first.aligned_range.start);
+    //         } else {
+    //             bail!("No elements");
+    //         }
+    //     } else {
+    //         bail!("No elements");
+    //     }
+    // }
 
-    fn resolve_partial(&self, offset: Offset) -> SimpleResult<Vec<ResolvedType>> {
-        let mut start = offset.position();
-
-        self.fields.iter().map(|(name, field_type)| {
-            let this_offset = offset.at(start);
-
-            let resolved = ResolvedType {
-                actual_range: field_type.actual_range(this_offset)?,
-                aligned_range: field_type.aligned_range(this_offset)?,
-                field_name: Some(name.clone()),
-                field_type: field_type.clone(),
-                value: field_type.to_string(this_offset)?,
-            };
-
-            start = resolved.aligned_range.end;
-
-            Ok(resolved)
-        }).collect::<SimpleResult<Vec<ResolvedType>>>()
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<H2Type>> {
+        Ok(self.fields.iter().map(|(_name, field_type)| {
+            field_type.clone()
+        }).collect())
     }
 
     // Get the user-facing name of the type
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        let elements = self.resolve_partial(offset)?.iter().map(|t| {
-            Ok(format!("{}: {}", t.field_name.clone().unwrap_or("(unnamed)".to_string()), t.to_string()))
+        // Because the collect() expects a result, this will end and bubble
+        // up errors automatically!
+        let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, child)| {
+            child.to_string(offset.at(range.start))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
-        Ok(elements.join(", "))
+        Ok(format!("[{}]", strings.join(", ")))
     }
 }
 
@@ -85,15 +78,13 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::basic_type::H2Number;
+    use crate::basic_type::{H2Number, ASCII, StrictASCII, IPv4};
     use crate::complex_type::H2Array;
 
     #[test]
     fn test_struct() -> SimpleResult<()> {
-        //           ----- hex ------ --hex-- -o- ----decimal----
-        let data = b"\x00\x01\x02\x03\x00\x01\x0f\x0f\x0e\x0d\x0c".to_vec();
-        let s_offset = Offset::Static(0);
-        let d_offset = Offset::Dynamic(Context::new(&data));
+        //           ----- hex ------ --hex-- -o-    ----decimal----
+        let data = b"\x00\x01\x02\x03\x00\x01p\x0fppp\x0f\x0e\x0d\x0c".to_vec();
 
         let t = H2Struct::new(vec![
             (
@@ -105,14 +96,16 @@ mod tests {
             ),
             (
                 "field_u16".to_string(),
-                H2Number::new(
+                H2Number::new_aligned(
+                    Alignment::Loose(3),
                     SizedDefinition::U16(Endian::Big),
                     SizedDisplay::Hex(Default::default()),
                 )
             ),
             (
                 "field_u8".to_string(),
-                H2Number::new(
+                H2Number::new_aligned(
+                    Alignment::Loose(4),
                     SizedDefinition::U8,
                     SizedDisplay::Octal(Default::default()),
                 )
@@ -124,224 +117,149 @@ mod tests {
                     SizedDisplay::Decimal,
                 )
             ),
-        ]);
+        ])?;
 
-        assert_eq!(11, t.actual_size(s_offset)?);
-        assert_eq!(11, t.actual_size(d_offset)?);
+        // Use real data
+        let offset = Offset::Dynamic(Context::new(&data));
+        assert_eq!(true, t.is_static());
+        assert_eq!(15, t.actual_size(offset)?);
+        assert_eq!(15, t.aligned_size(offset)?);
+        assert_eq!(0..15, t.actual_range(offset)?);
+        assert_eq!(0..15, t.aligned_range(offset)?);
+        // TODO: This needs field names
+        assert_eq!("[0x00010203, 0x0001, 0o17, 202182159]", t.to_string(offset)?);
+        assert_eq!(0, t.related(offset)?.len());
+        assert_eq!(4, t.children(offset)?.len());
 
-        let resolved = t.resolve_full(d_offset)?;
+        // Resolve and validate the resolved version
+        let r = t.resolve(offset)?;
+        assert_eq!(15, r.actual_size());
+        assert_eq!(15, r.aligned_size());
+        assert_eq!(0..15, r.actual_range);
+        assert_eq!(0..15, r.aligned_range);
+        // TODO: This needs field names
+        assert_eq!("[0x00010203, 0x0001, 0o17, 202182159]", r.value);
+        assert_eq!(0, r.related.len());
+        assert_eq!(4, r.children.len());
 
-        assert_eq!(4, resolved.len());
-        assert_eq!(0..4, resolved[0].actual_range);
-        assert_eq!("0x00010203", resolved[0].to_string());
+        // Use abstract data
+        let offset = Offset::Static(0);
+        assert_eq!(true, t.is_static());
+        assert_eq!(15, t.actual_size(offset)?);
+        assert_eq!(15, t.aligned_size(offset)?);
+        assert_eq!(0..15, t.actual_range(offset)?);
+        assert_eq!(0..15, t.aligned_range(offset)?);
+        // TODO: This needs field names
+        assert_eq!("[Number, Number, Number, Number]", t.to_string(offset)?);
+        assert_eq!(0, t.related(offset)?.len());
+        assert_eq!(4, t.children(offset)?.len());
 
-        assert_eq!(4..6, resolved[1].actual_range);
-        assert_eq!("0x0001", resolved[1].to_string());
-
-        assert_eq!(6..7, resolved[2].actual_range);
-        assert_eq!("0o17", resolved[2].to_string());
-
-        assert_eq!(7..11, resolved[3].actual_range);
-        assert_eq!("202182159", resolved[3].to_string());
+        // Resolve and validate the resolved version
+        let r = t.resolve(offset)?;
+        assert_eq!(15, r.actual_size());
+        assert_eq!(15, r.aligned_size());
+        assert_eq!(0..15, r.actual_range);
+        assert_eq!(0..15, r.aligned_range);
+        // TODO: This needs field names
+        assert_eq!("[Number, Number, Number, Number]", r.value);
+        assert_eq!(0, r.related.len());
+        assert_eq!(4, r.children.len());
 
         Ok(())
     }
 
     #[test]
     fn test_nested_struct() -> SimpleResult<()> {
-        //           ----- hex ------  ----struct----
-        //                            -A- -B- ---C---
-        let data = b"\x00\x01\x02\x03\x41\x42\x43\x43\x01\x00\x00\x00".to_vec();
-        let s_offset = Offset::Static(0);
-        let d_offset = Offset::Dynamic(Context::new(&data));
+        //              -- hex --  ----------------struct----------------  ----- ipv4 ----
+        //                         -A- -B- ---C--- ----- char_array -----
+        let data = b"XXX\x00\x01pp\x41\x42\x43\x43\x61\x62\x63\x64\x65ppp\x7f\x00\x00\x01".to_vec();
 
         let t = H2Struct::new(vec![
             (
-                "field_u32".to_string(),
-                H2Number::new(
-                    SizedDefinition::U32(Endian::Big),
+                "hex".to_string(),
+                H2Number::new_aligned(
+                    Alignment::Loose(4),
+                    SizedDefinition::U16(Endian::Big),
                     SizedDisplay::Hex(Default::default()),
                 )
             ),
             (
                 "struct".to_string(),
                 H2Struct::new(vec![
-                    ("A".to_string(), H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())).into()),
-                    ("B".to_string(), H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())).into()),
-                    ("C".to_string(), H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Hex(Default::default())).into()),
-                ])
+                    (
+                        "A".to_string(),
+                        H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())).into()
+                    ),
+                    (
+                        "B".to_string(),
+                        H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())).into()
+                    ),
+                    (
+                        "C".to_string(),
+                        H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Hex(Default::default())).into()
+                    ),
+                    (
+                        "char_array".to_string(),
+                        H2Array::new_aligned(
+                            Alignment::Loose(8),
+                            5,
+                            ASCII::new(StrictASCII::Permissive),
+                        )?,
+                    )
+                ])?,
             ),
             (
-                "field_u32_little".to_string(),
-                H2Number::new(
-                    SizedDefinition::U32(Endian::Little),
-                    SizedDisplay::Decimal,
-                )
+                "ipv4".to_string(),
+                IPv4::new(Endian::Big)
             ),
-        ]);
+        ])?;
 
-        assert_eq!(12, t.actual_size(s_offset)?);
-        assert_eq!(12, t.actual_size(d_offset)?);
+        // Start at 3 to test offsets and alignment
+        let offset = Offset::Dynamic(Context::new_at(&data, 3));
+        assert_eq!(true, t.is_static());
+        assert_eq!(20, t.actual_size(offset)?);
+        assert_eq!(20, t.aligned_size(offset)?);
+        assert_eq!(3..23, t.actual_range(offset)?);
+        assert_eq!(3..23, t.aligned_range(offset)?);
+        // TODO: This needs field names
+        assert_eq!("[0x0001, [0x41, 0x42, 0x4343, [a, b, c, d, e]], 127.0.0.1]", t.to_string(offset)?);
+        assert_eq!(0, t.related(offset)?.len());
+        assert_eq!(3, t.children(offset)?.len());
 
-        let resolved = t.resolve_full(d_offset)?;
-        assert_eq!(5, resolved.len());
+        // Make sure it resolves sanely
+        let r = t.resolve(offset)?;
+        assert_eq!(20, r.actual_size());
+        assert_eq!(20, r.aligned_size());
+        assert_eq!(3..23, r.actual_range);
+        assert_eq!(3..23, r.aligned_range);
+        // TODO: This needs field names
+        assert_eq!("[0x0001, [0x41, 0x42, 0x4343, [a, b, c, d, e]], 127.0.0.1]", r.value);
+        assert_eq!(0, r.related.len());
+        assert_eq!(3, r.children.len());
 
-        assert_eq!(0..4,         resolved[0].actual_range);
-        assert_eq!("0x00010203", resolved[0].to_string());
-        //assert_eq!(vec!["field_u32".to_string()], resolved[0].field_name.unwrap());
+        // Check the first child
+        assert_eq!(2, r.children[0].actual_size());
+        assert_eq!(4, r.children[0].aligned_size());
+        assert_eq!("0x0001", r.children[0].value);
+        assert_eq!(0, r.children[0].children.len());
 
-        assert_eq!(4..5,     resolved[1].actual_range);
-        assert_eq!("0x41",   resolved[1].to_string());
-        // assert_eq!(Some(vec!["struct".to_string(), "A".to_string()]), resolved[1].breadcrumbs);
+        // Check the second child
+        assert_eq!(12, r.children[1].actual_size());
+        assert_eq!(12, r.children[1].aligned_size());
+        assert_eq!("[0x41, 0x42, 0x4343, [a, b, c, d, e]]", r.children[1].value);
+        assert_eq!(4, r.children[1].children.len());
 
-        assert_eq!(5..6,     resolved[2].actual_range);
-        assert_eq!("0x42",   resolved[2].to_string());
-        // assert_eq!(Some(vec!["struct".to_string(), "B".to_string()]), resolved[2].breadcrumbs);
-
-        assert_eq!(6..8,     resolved[3].actual_range);
-        assert_eq!("0x4343", resolved[3].to_string());
-        // assert_eq!(Some(vec!["struct".to_string(), "C".to_string()]), resolved[3].breadcrumbs);
-
-        assert_eq!(8..12,    resolved[4].actual_range);
-        assert_eq!("1",      resolved[4].to_string());
-        // assert_eq!(Some(vec!["field_u32_little".to_string()]), resolved[4].breadcrumbs);
+        // Check the character array
+        assert_eq!(5, r.children[1].children[3].actual_size());
+        assert_eq!(8, r.children[1].children[3].aligned_size());
+        assert_eq!(5, r.children[1].children[3].children.len());
 
         Ok(())
     }
 
     #[test]
-    fn test_alignment() -> SimpleResult<()> {
-        // P = padding / alignment bytes
-        // Line 1: Starting at second byte, pad to 4 on both sides
-        // Line 2: Pad end to 4 bytes
-        // Line 3: The ZZZ are an array, then a 16-bit fully padded value: AA
-        // Line 4: 4-byte big-endian value, padded to 8 bytes on the right
-        // Line 4: 4-byte little-endian value, padded to 8 bytes on the right
-        // Line 5: A 1-byte value to make sure we got to the right place
-        let data = b"P\x01PP\
-                     \x02PPP\
-                     ZZZA\
-                     APPP\
-                     \x05\x06\x07\x08PPPP\
-                     \x0c\x0b\x0a\x09PPPP\
-                     \x0dPPP".to_vec();
-
-        // Note: starting at offset 1 (so we can test the full alignment)
-        let d_offset = Offset::Dynamic(Context::new_at(&data, 1));
-
-        let t = H2Struct::new_aligned(Alignment::Loose(4), vec![
-            (
-                "field_u8_full".to_string(),
-                H2Number::new_aligned(
-                    Alignment::Loose(4),
-                    SizedDefinition::U8,
-                    SizedDisplay::Hex(Default::default()),
-                )
-            ),
-            (
-                "field_u8_after".to_string(),
-                H2Number::new_aligned(
-                    Alignment::Loose(4),
-                    SizedDefinition::U8,
-                    SizedDisplay::Hex(Default::default()),
-                )
-            ),
-            (
-                "padding_array".to_string(),
-                H2Array::new(3, H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default()))),
-            ),
-            (
-                "other_struct".to_string(),
-                H2Struct::new(vec![
-                    (
-                        "nested_field_u16_full".to_string(),
-                        H2Number::new_aligned(
-                            Alignment::Loose(4),
-                            SizedDefinition::U16(Endian::Big),
-                            SizedDisplay::Hex(Default::default()),
-                        )
-                    ),
-                ])
-            ),
-            (
-                "u32_big".to_string(),
-                H2Number::new_aligned(
-                    Alignment::Loose(8),
-                    SizedDefinition::U32(Endian::Big),
-                    SizedDisplay::Hex(Default::default()),
-                )
-            ),
-            (
-                "u32_little".to_string(),
-                H2Number::new_aligned(
-                    Alignment::Loose(8),
-                    SizedDefinition::U32(Endian::Little),
-                    SizedDisplay::Hex(Default::default()),
-                )
-            ),
-            (
-                "check".to_string(),
-                H2Number::new_aligned(
-                    Alignment::None,
-                    SizedDefinition::U8,
-                    SizedDisplay::Hex(Default::default()),
-                )
-            ),
-        ]);
-
-        // The sum of all the fields, with the fields' own alignment
-        assert_eq!(32, t.actual_size(d_offset)?);
-        assert_eq!(1..33, t.actual_range(d_offset)?);
-
-        // We start offset by 1, which means to get to the next aligned size
-        // (36), it would make this 35 long
-        assert_eq!(35, t.aligned_size(d_offset)?);
-        assert_eq!(1..36, t.aligned_range(d_offset)?);
-
-        // 7 direct children - the fields
-        assert_eq!(7, t.resolve_partial(d_offset)?.len());
-
-        // 9 total children, due to the array
-        assert_eq!(9, t.resolve_full(d_offset)?.len());
-
-        let resolved = t.resolve_full(d_offset)?;
-
-        assert_eq!("0x01", resolved[0].to_string());
-        assert_eq!(1..2,   resolved[0].actual_range);
-        assert_eq!(1..4,   resolved[0].aligned_range);
-
-        assert_eq!("0x02", resolved[1].to_string());
-        assert_eq!(4..5,   resolved[1].actual_range);
-        assert_eq!(4..8,   resolved[1].aligned_range);
-
-        assert_eq!("0x5a", resolved[2].to_string());
-        assert_eq!(8..9,   resolved[2].actual_range);
-        assert_eq!(8..9,   resolved[2].aligned_range);
-
-        assert_eq!("0x5a", resolved[3].to_string());
-        assert_eq!(9..10,  resolved[3].actual_range);
-        assert_eq!(9..10,  resolved[3].aligned_range);
-
-        assert_eq!("0x5a", resolved[4].to_string());
-        assert_eq!(10..11, resolved[4].actual_range);
-        assert_eq!(10..11, resolved[4].aligned_range);
-
-        assert_eq!("0x4141", resolved[5].to_string());
-        assert_eq!(11..13,   resolved[5].actual_range);
-        assert_eq!(11..16,   resolved[5].aligned_range);
-
-        assert_eq!("0x05060708", resolved[6].to_string());
-        assert_eq!(16..20,       resolved[6].actual_range);
-        assert_eq!(16..24,       resolved[6].aligned_range);
-
-        assert_eq!("0x090a0b0c", resolved[7].to_string());
-        assert_eq!(24..28,       resolved[7].actual_range);
-        assert_eq!(24..32,       resolved[7].aligned_range);
-
-        assert_eq!("0x0d", resolved[8].to_string());
-        assert_eq!(32..33, resolved[8].actual_range);
-        assert_eq!(32..33, resolved[8].aligned_range);
-
+    fn test_dynamically_sized_struct() -> SimpleResult<()> {
+        // TODO
         Ok(())
     }
 }

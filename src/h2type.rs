@@ -37,7 +37,7 @@ impl H2Type {
 
             // Complex
             H2Types::H2Array(t)   => t,
-            // H2Types::H2Struct(t)  => t,
+            H2Types::H2Struct(t)  => t,
 
             // Dynamic
             // H2Types::NTString(t)  => t,

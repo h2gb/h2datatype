@@ -22,7 +22,7 @@ pub enum H2Types {
 
     // Complex
     H2Array(H2Array),
-    // H2Struct(H2Struct),
+    H2Struct(H2Struct),
 
     // Dynamic
     // NTString(dynamic_type::ntstring::NTString),

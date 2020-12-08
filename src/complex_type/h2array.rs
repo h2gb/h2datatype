@@ -14,7 +14,6 @@ pub struct H2Array {
 }
 
 impl H2Array {
-    // TODO: We need to prevent zero-length arrays
     pub fn new_aligned(alignment: Alignment, length: u64, field_type: H2Type) -> SimpleResult<H2Type> {
         if length == 0 {
             bail!("Arrays must be at least one element long");

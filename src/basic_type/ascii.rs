@@ -42,6 +42,7 @@ impl H2TypeTrait for ASCII {
         Ok(1)
     }
 
+    // TODO: Add '' around the result
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => Ok("ASCII".to_string()),
