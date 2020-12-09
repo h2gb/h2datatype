@@ -1,3 +1,6 @@
+// Lets us match using a range
+#![feature(exclusive_range_pattern)]
+
 mod alignment;
 pub use alignment::Alignment;
 

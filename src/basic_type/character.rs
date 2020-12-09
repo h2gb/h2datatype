@@ -130,7 +130,16 @@ impl H2TypeTrait for Character {
                 let c = self.character(context)?;
 
                 match c as u32 {
-                    0x00 => "\\0",
+                    0x00        => Ok("'\\0'".to_string()),
+                    0x01..=0x06 => Ok(format!("'\\x{:02x}'", c as u32)),
+                    0x07        => Ok("'\\a'".to_string()),
+                    0x08        => Ok("'\\b'".to_string()),
+                    0x09        => Ok("'\\t'".to_string()),
+                    0x0a        => Ok("'\\n'".to_string()),
+                    0x0b        => Ok("'\\v'".to_string()),
+                    0x0c        => Ok("'\\f'".to_string()),
+                    0x0d        => Ok("'\\r'".to_string()),
+                    0x0e..=0x1f => Ok(format!("'\\x{:02x}'", c as u32)),
                     _ => Ok(format!("'{}'", self.character(context)?))
                 }
             }
@@ -224,12 +233,12 @@ mod tests {
 
     #[test]
     fn test_ascii_to_string_permissive() -> SimpleResult<()> {
-        let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
+        let data = b"\x00\x06\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Permissive));
 
-        assert_eq!("'\\x00'", t.to_string(offset.at(0))?);
-        assert_eq!("'\\x1f'", t.to_string(offset.at(1))?);
+        assert_eq!("'\\0'",   t.to_string(offset.at(0))?);
+        assert_eq!("'\\x06'", t.to_string(offset.at(1))?);
         assert_eq!("' '", t.to_string(offset.at(2))?);
         assert_eq!("'A'", t.to_string(offset.at(3))?);
         assert_eq!("'B'", t.to_string(offset.at(4))?);
@@ -243,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_ascii_to_string_strict() -> SimpleResult<()> {
-        let data = b"\x00\x1F\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
+        let data = b"\x00\x06\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Strict));
 
@@ -251,8 +260,8 @@ mod tests {
         assert!(t.to_string(offset.at(7)).is_err());
         assert!(t.to_string(offset.at(8)).is_err());
 
-        assert_eq!("'\\x00'", t.to_string(offset.at(0))?);
-        assert_eq!("'\\x1f'", t.to_string(offset.at(1))?);
+        assert_eq!("'\\0'",   t.to_string(offset.at(0))?);
+        assert_eq!("'\\x06'", t.to_string(offset.at(1))?);
         assert_eq!("' '",     t.to_string(offset.at(2))?);
         assert_eq!("'A'",     t.to_string(offset.at(3))?);
         assert_eq!("'B'",     t.to_string(offset.at(4))?);
