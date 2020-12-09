@@ -45,6 +45,14 @@ impl H2TypeTrait for H2Number {
             }
         }
     }
+
+    fn to_u64(&self, offset: Offset) -> SimpleResult<u64> {
+        Ok(self.definition.to_u64(offset.get_dynamic()?)?)
+    }
+
+    fn to_i64(&self, offset: Offset) -> SimpleResult<i64> {
+        Ok(self.definition.to_i64(offset.get_dynamic()?)?)
+    }
 }
 
 #[cfg(test)]
@@ -147,4 +155,41 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_to_i64() -> SimpleResult<()> {
+        let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let t = H2Number::new(
+            SizedDefinition::I16(Endian::Big),
+            SizedDisplay::Decimal,
+        );
+
+        assert_eq!(0,      t.to_i64(offset.at(0))?);
+        assert_eq!(32767,  t.to_i64(offset.at(2))?);
+        assert_eq!(-32768, t.to_i64(offset.at(4))?);
+        assert_eq!(-1,     t.to_i64(offset.at(6))?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_to_u64() -> SimpleResult<()> {
+        let data = b"\x00\x00\x7f\xff\x80\x00\xff\xff".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let t = H2Number::new(
+            SizedDefinition::U16(Endian::Big),
+            SizedDisplay::Decimal,
+        );
+
+        assert_eq!(0,     t.to_u64(offset.at(0))?);
+        assert_eq!(32767, t.to_u64(offset.at(2))?);
+        assert_eq!(32768, t.to_u64(offset.at(4))?);
+        assert_eq!(65535, t.to_u64(offset.at(6))?);
+
+        Ok(())
+    }
+
 }

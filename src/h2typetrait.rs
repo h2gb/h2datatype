@@ -118,7 +118,11 @@ pub trait H2TypeTrait {
         bail!("This type cannot be converted to a character");
     }
 
-    fn to_u64(&self, _offset: Offset) -> SimpleResult<char> {
+    fn to_u64(&self, _offset: Offset) -> SimpleResult<u64> {
         bail!("This type cannot be converted to a u64");
+    }
+
+    fn to_i64(&self, _offset: Offset) -> SimpleResult<i64> {
+        bail!("This type cannot be converted to a i64");
     }
 }
