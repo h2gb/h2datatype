@@ -330,7 +330,15 @@ mod tests {
 //     }
 
     #[test]
-    fn test_dynamic_array() -> SimpleResult<()> {
+    fn test_dynamic_utf8_array() -> SimpleResult<()> {
+        //             --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a = H2Array::new(7, Character::new(CharacterType::UTF8))?;
+        assert_eq!(18, a.actual_size(offset)?);
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", a.to_string(offset)?);
+
         Ok(())
     }
 }

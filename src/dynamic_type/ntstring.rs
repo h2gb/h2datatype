@@ -1,19 +1,17 @@
-use simple_error::{SimpleResult, bail};
-// use sized_number::{Context, SizedDefinition, SizedDisplay};
-use sized_number::Context;
+use simple_error::{bail, SimpleResult};
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, ResolvedType, H2TypeTrait};
-// use crate::basic_type::character::Character;
-// use crate::basic_type::h2number::H2Number;
-// use crate::static_type::h2array::H2Array;
-// use crate::static_type::StaticType;
+use sized_number::{Endian, Context};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset};
+use crate::alignment::Alignment;
+use crate::basic_type::{Character, CharacterType};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct NTString {
+    character: H2Type,
 }
 
 // impl From<NTString> for DynamicType {
@@ -23,63 +21,51 @@ pub struct NTString {
 // }
 
 impl NTString {
-    pub fn new() -> Self {
+    pub fn new(character: H2Type) -> Self {
         Self {
+            character: character,
         }
+    }
+
+    fn analyze(&self, offset: Offset) -> SimpleResult<(u64, Vec<char>)> {
+        let mut position = offset.position();
+        let mut result = Vec::new();
+
+        loop {
+            let this_offset = offset.at(position);
+            let this_size = self.character.actual_size(this_offset)?;
+            let this_character = self.character.to_char(this_offset)?;
+
+            result.push(this_character);
+            position = position + this_size;
+
+            if this_character == '\0' {
+                break;
+            }
+        }
+
+        Ok((position, result))
+        //bail!("TODO");
     }
 }
 
 impl H2TypeTrait for NTString {
     fn is_static(&self) -> bool {
-        false
+        self.character.is_static()
     }
 
-    fn static_size(&self) -> SimpleResult<u64> {
-        bail!("No size for dynamic types");
+    fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
+        Ok(self.analyze(offset)?.0)
     }
 
-    fn name(&self) -> String {
-        format!("Null-terminated string")
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+        Ok(self.analyze(offset)?.1.iter().collect())
     }
 
-    // Includes null-terminator
-    fn size(&self, context: Context) -> SimpleResult<u64> {
-        let mut size = 0;
-
-        loop {
-            let c = context.at(context.position() + size).read_u8()?;
-
-            if c == 0 {
-                break;
-            }
-
-            if c < 0x20 || c > 0x7E {
-                bail!("Not a valid ASCII string");
-            }
-
-            size += 1;
-        }
-
-        Ok(size + 1)
-    }
-
-    fn to_string(&self, context: Context) -> SimpleResult<String> {
-        let size = self.size(context)?;
-
-        if size == 0 {
-            Ok("\"\"".to_string())
-        } else {
-            let v = context.read_bytes((size - 1) as usize)?;
-            match std::str::from_utf8(&v) {
-                Ok(s)  => Ok(format!("\"{}\"", s)),
-                Err(e) => bail!("<invalid string: {}>", e),
-            }
-        }
-    }
-
-    fn resolve_partial(&self, context: Context) -> SimpleResult<Vec<ResolvedType>> {
-        let size = self.size(context)?;
-        let mut result: Vec<ResolvedType> = Vec::new();
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
+        bail!("TODO");
+        // let size = self.size(context)?;
+        // let mut result: Vec<ResolvedType> = Vec::new();
 
         // TODO
         // if size > 1 {
@@ -96,7 +82,7 @@ impl H2TypeTrait for NTString {
         // ));
 
 
-        Ok(result)
+        //Ok(result)
     }
 }
 
@@ -106,49 +92,15 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::Context;
 
-    // #[test]
-    // fn test_ntstring() -> SimpleResult<()> {
-    //     let data = b"\0abcd\0ffff".to_vec();
-    //     let context = Context::new(&data);
+    #[test]
+    fn test_utf8_string() -> SimpleResult<()> {
+        //             --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
 
-    //     let s = NTString::new();
-    //     assert_eq!(5, s.size(context.at(1))?);
-    //     assert_eq!("\"abcd\"", s.to_string(context.at(1))?);
+        let a = NTString::new(Character::new(CharacterType::UTF8));
+        assert_eq!("AB❄☢𝄞😈÷\0", a.to_string(offset)?);
 
-    //     let r = s.partially_resolve(context.at(1))?;
-    //     assert_eq!(2, r.len());
-    //     assert_eq!("[a, b, c, d]", r[0].to_string(context.at(1))?);
-    //     assert_eq!("0", r[1].to_string(context.at(1))?);
-
-    //     Ok(())
-    // }
-
-    // #[test]
-    // fn test_ntstring_no_terminator() -> SimpleResult<()> {
-    //     let data = b"\0abcd".to_vec();
-    //     let context = Context::new(&data);
-
-    //     let s = NTString::new();
-    //     assert!(s.size(context.at(1)).is_err());
-    //     assert!(s.to_string(context.at(1)).is_err());
-    //     assert!(s.partially_resolve(context.at(1)).is_err());
-
-    //     Ok(())
-    // }
-
-    // #[test]
-    // fn test_ntstring_zero_length() -> SimpleResult<()> {
-    //     let data = b"\0abcd\0ffff".to_vec();
-    //     let context = Context::new(&data);
-
-    //     let s = NTString::new();
-    //     assert_eq!(1, s.size(context)?);
-    //     assert_eq!("\"\"", s.to_string(context)?);
-
-    //     let r = s.partially_resolve(context)?;
-    //     assert_eq!(1, r.len());
-    //     assert_eq!("0", r[0].to_string(context)?);
-
-    //     Ok(())
-    // }
+        Ok(())
+    }
 }
