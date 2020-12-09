@@ -153,10 +153,6 @@ impl H2TypeTrait for Character {
     fn to_u64(&self, offset: Offset) -> SimpleResult<u64> {
         Ok(self.character(offset.get_dynamic()?)? as u64)
     }
-
-    fn to_i64(&self, offset: Offset) -> SimpleResult<i64> {
-        Ok(self.character(offset.get_dynamic()?)? as i64)
-    }
 }
 
 #[cfg(test)]

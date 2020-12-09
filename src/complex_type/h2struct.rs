@@ -13,7 +13,6 @@ pub struct H2Struct {
 }
 
 impl H2Struct {
-    // TODO: We need to prevent zero-length arrays
     pub fn new_aligned(alignment: Alignment, fields: Vec<(String, H2Type)>) -> SimpleResult<H2Type> {
         if fields.len() == 0 {
             bail!("Structs must contain at least one field");
@@ -126,7 +125,6 @@ mod tests {
         assert_eq!(15, t.aligned_size(offset)?);
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
-        // TODO: This needs field names
         assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
@@ -137,7 +135,6 @@ mod tests {
         assert_eq!(15, r.aligned_size());
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
-        // TODO: This needs field names
         assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
@@ -149,7 +146,6 @@ mod tests {
         assert_eq!(15, t.aligned_size(offset)?);
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
-        // TODO: This needs field names
         assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
@@ -160,7 +156,6 @@ mod tests {
         assert_eq!(15, r.aligned_size());
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
-        // TODO: This needs field names
         assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
@@ -221,7 +216,6 @@ mod tests {
         assert_eq!(20, t.aligned_size(offset)?);
         assert_eq!(3..23, t.actual_range(offset)?);
         assert_eq!(3..23, t.aligned_range(offset)?);
-        // TODO: This needs field names
         assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", t.to_string(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(3, t.children(offset)?.len());
@@ -232,7 +226,6 @@ mod tests {
         assert_eq!(20, r.aligned_size());
         assert_eq!(3..23, r.actual_range);
         assert_eq!(3..23, r.aligned_range);
-        // TODO: This needs field names
         assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", r.value);
         assert_eq!(0, r.related.len());
         assert_eq!(3, r.children.len());
