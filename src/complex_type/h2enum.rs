@@ -79,7 +79,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::basic_type::{H2Number, ASCII, StrictASCII};
+    use crate::basic_type::{H2Number, Character, CharacterType, StrictASCII};
     use crate::complex_type::H2Array;
 
     #[test]
@@ -108,7 +108,7 @@ mod tests {
                 H2Array::new_aligned(
                     Alignment::Loose(12),
                     8,
-                    ASCII::new(StrictASCII::Permissive),
+                    Character::new(CharacterType::ASCII(StrictASCII::Permissive)),
                 )?,
             ),
             (
