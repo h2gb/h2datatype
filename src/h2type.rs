@@ -68,11 +68,6 @@ impl H2Type {
         self.field_type().range(offset, self.alignment)
     }
 
-    // Render as a string
-    pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        self.field_type().to_string(offset)
-    }
-
     // Get "related" nodes - ie, what a pointer points to
     pub fn related(&self, offset: Offset) -> SimpleResult<Vec<(u64, H2Type)>> {
         self.field_type().related(offset)
@@ -84,5 +79,17 @@ impl H2Type {
 
     pub fn resolve(&self, offset: Offset, name: Option<String>) -> SimpleResult<ResolvedType> {
         self.field_type().resolve(offset, self.alignment, name)
+    }
+
+    pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+        self.field_type().to_string(offset)
+    }
+
+    pub fn to_char(&self, offset: Offset) -> SimpleResult<char> {
+        self.field_type().to_char(offset)
+    }
+
+    pub fn to_u64(&self, offset: Offset) -> SimpleResult<char> {
+        self.field_type().to_u64(offset)
     }
 }

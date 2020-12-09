@@ -45,7 +45,7 @@ impl Character {
     fn read_ascii_strict(context: Context) -> SimpleResult<char> {
         let number = context.read_u8()?;
 
-        match number > 0x1F && number < 0x7F {
+        match number < 0x7F {
             true  => Ok(number as char),
             false => bail!("Invalid ASCII character: {:#x}", number),
         }
@@ -54,7 +54,7 @@ impl Character {
     fn read_ascii_permissive(context: Context) -> SimpleResult<char> {
         let number = context.read_u8()?;
 
-        match number > 0x1F && number < 0x7F {
+        match number < 0x7F {
             true  => Ok(number as char),
             false => Ok('�'),
         }
@@ -127,9 +127,19 @@ impl H2TypeTrait for Character {
                 }
             },
             Offset::Dynamic(context) => {
-                Ok(format!("'{}'", self.character(context)?))
+                let c = self.character(context)?;
+
+                if (c as u32) < 0x20 {
+                    Ok(format!("'\\x{:02x}'", c as u32))
+                } else {
+                    Ok(format!("'{}'", self.character(context)?))
+                }
             }
         }
+    }
+
+    fn to_char(&self, offset: Offset) -> SimpleResult<char> {
+        self.character(offset.get_dynamic()?)
     }
 }
 
@@ -219,8 +229,8 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Permissive));
 
-        assert_eq!("'�'", t.to_string(offset.at(0))?);
-        assert_eq!("'�'", t.to_string(offset.at(1))?);
+        assert_eq!("'\\x00'", t.to_string(offset.at(0))?);
+        assert_eq!("'\\x1f'", t.to_string(offset.at(1))?);
         assert_eq!("' '", t.to_string(offset.at(2))?);
         assert_eq!("'A'", t.to_string(offset.at(3))?);
         assert_eq!("'B'", t.to_string(offset.at(4))?);
@@ -238,16 +248,16 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Strict));
 
-        assert!(t.to_string(offset.at(0)).is_err());
-        assert!(t.to_string(offset.at(1)).is_err());
         assert!(t.to_string(offset.at(6)).is_err());
         assert!(t.to_string(offset.at(7)).is_err());
         assert!(t.to_string(offset.at(8)).is_err());
 
-        assert_eq!("' '", t.to_string(offset.at(2))?);
-        assert_eq!("'A'", t.to_string(offset.at(3))?);
-        assert_eq!("'B'", t.to_string(offset.at(4))?);
-        assert_eq!("'~'", t.to_string(offset.at(5))?);
+        assert_eq!("'\\x00'", t.to_string(offset.at(0))?);
+        assert_eq!("'\\x1f'", t.to_string(offset.at(1))?);
+        assert_eq!("' '",     t.to_string(offset.at(2))?);
+        assert_eq!("'A'",     t.to_string(offset.at(3))?);
+        assert_eq!("'B'",     t.to_string(offset.at(4))?);
+        assert_eq!("'~'",     t.to_string(offset.at(5))?);
 
         Ok(())
     }
@@ -380,6 +390,43 @@ mod tests {
         assert_eq!("'☢'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(12))?);
         assert_eq!("'𝄞'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(16))?);
         assert_eq!("'😈'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(20))?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_null() -> SimpleResult<()> {
+        let data = b"\x41\x00\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        assert_eq!('A',  Character::new(CharacterType::ASCII(StrictASCII::Permissive)).to_char(offset.at(0))?);
+        assert_eq!('\0', Character::new(CharacterType::ASCII(StrictASCII::Permissive)).to_char(offset.at(1))?);
+        assert_eq!('A',  Character::new(CharacterType::ASCII(StrictASCII::Permissive)).to_char(offset.at(2))?);
+
+        assert_eq!('A',  Character::new(CharacterType::ASCII(StrictASCII::Strict)).to_char(offset.at(0))?);
+        assert_eq!('\0', Character::new(CharacterType::ASCII(StrictASCII::Strict)).to_char(offset.at(1))?);
+        assert_eq!('A',  Character::new(CharacterType::ASCII(StrictASCII::Strict)).to_char(offset.at(2))?);
+
+        let data = b"\x41\x00\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        assert_eq!('A',  Character::new(CharacterType::UTF8).to_char(offset.at(0))?);
+        assert_eq!('\0', Character::new(CharacterType::UTF8).to_char(offset.at(1))?);
+        assert_eq!('A',  Character::new(CharacterType::UTF8).to_char(offset.at(2))?);
+
+        let data = b"\x00\x41\x00\x00\x00\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        assert_eq!('A',  Character::new(CharacterType::UTF16(Endian::Big)).to_char(offset.at(0))?);
+        assert_eq!('\0', Character::new(CharacterType::UTF16(Endian::Big)).to_char(offset.at(2))?);
+        assert_eq!('A',  Character::new(CharacterType::UTF16(Endian::Big)).to_char(offset.at(4))?);
+
+        let data = b"\x00\x00\x00\x41\x00\x00\x00\x00\x00\x00\x00\x41".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        assert_eq!('A',  Character::new(CharacterType::UTF32(Endian::Big)).to_char(offset.at(0))?);
+        assert_eq!('\0', Character::new(CharacterType::UTF32(Endian::Big)).to_char(offset.at(4))?);
+        assert_eq!('A',  Character::new(CharacterType::UTF32(Endian::Big)).to_char(offset.at(8))?);
 
         Ok(())
     }

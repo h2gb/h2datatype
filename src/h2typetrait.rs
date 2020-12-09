@@ -113,4 +113,12 @@ pub trait H2TypeTrait {
             related: self.related(offset)?,
         })
     }
+
+    fn to_char(&self, _offset: Offset) -> SimpleResult<char> {
+        bail!("This type cannot be converted to a character");
+    }
+
+    fn to_u64(&self, _offset: Offset) -> SimpleResult<char> {
+        bail!("This type cannot be converted to a u64");
+    }
 }
