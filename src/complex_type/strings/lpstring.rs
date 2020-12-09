@@ -8,40 +8,40 @@ use crate::complex_type::H2Array;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct NTString {
+pub struct LPString {
+    length: H2Type,
     character: H2Type,
 }
 
-impl NTString {
-    pub fn new(character: H2Type) -> Self {
+impl LPString {
+    // TODO: Handle 0-length
+    pub fn new(length: H2Type, character: H2Type) -> Self {
         Self {
+            length: length,
             character: character,
         }
     }
 
     fn analyze(&self, offset: Offset) -> SimpleResult<(u64, Vec<char>)> {
-        let mut position = offset.position();
-        let mut result = Vec::new();
+        let length = self.length.to_u64(offset)?;
 
-        loop {
+        let mut position = offset.position() + self.length.aligned_size(offset)?;
+
+        let mut result = Vec::new();
+        for _ in 0..length {
             let this_offset = offset.at(position);
             let this_size = self.character.actual_size(this_offset)?;
             let this_character = self.character.to_char(this_offset)?;
 
             result.push(this_character);
             position = position + this_size;
-
-            if this_character == '\0' {
-                break;
-            }
         }
 
         Ok((position, result))
-        //bail!("TODO");
     }
 }
 
-impl H2TypeTrait for NTString {
+impl H2TypeTrait for LPString {
     fn is_static(&self) -> bool {
         self.character.is_static()
     }
@@ -54,12 +54,8 @@ impl H2TypeTrait for NTString {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
-        if chars.len() == 0 {
-            return Ok("".to_string());
-        }
-
         // Strip the last character (which is the null byte)
-        let s: String = chars[0..(chars.len() - 1)].into_iter().collect();
+        let s: String = chars.into_iter().collect();
 
         Ok(s)
     }
@@ -77,54 +73,46 @@ impl H2TypeTrait for NTString {
 mod tests {
     use super::*;
     use simple_error::SimpleResult;
-    use sized_number::Context;
-    use crate::basic_type::{Character, CharacterType};
+    use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
+    use crate::basic_type::{Character, CharacterType, H2Number};
 
     #[test]
-    fn test_utf8_string() -> SimpleResult<()> {
+    fn test_utf8_lpstring() -> SimpleResult<()> {
         //             --  --  ----------  ----------  --------------  --------------  ------
-        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
+        let data = b"\x00\x07\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let size_type = H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
+
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
     }
 
     #[test]
-    fn test_zero_length_utf8_string() -> SimpleResult<()> {
-        let data = b"\x00".to_vec();
+    fn test_zero_length_utf8_lpstring() -> SimpleResult<()> {
+        let data = b"\x00\x41".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
         assert_eq!("", a.to_string(offset)?);
 
         Ok(())
     }
 
     #[test]
-    fn test_blank_string() -> SimpleResult<()> {
+    fn test_blank_lpstring() -> SimpleResult<()> {
         let data = b"".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
         assert!(a.to_string(offset).is_err());
 
         Ok(())
     }
 
-    #[test]
-    fn test_missing_terminator() -> SimpleResult<()> {
-        //             --  --  ----------  ----------  --------------  --------------  ------
-        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
-        let offset = Offset::Dynamic(Context::new(&data));
-
-        let a = NTString::new(Character::new(CharacterType::UTF8));
-        assert!(a.to_string(offset).is_err());
-
-        Ok(())
-    }
-
-    // TODO: Test padded characters
+    // TODO: test an aligned size
 }
