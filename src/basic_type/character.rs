@@ -129,10 +129,9 @@ impl H2TypeTrait for Character {
             Offset::Dynamic(context) => {
                 let c = self.character(context)?;
 
-                if (c as u32) < 0x20 {
-                    Ok(format!("'\\x{:02x}'", c as u32))
-                } else {
-                    Ok(format!("'{}'", self.character(context)?))
+                match c as u32 {
+                    0x00 => "\\0",
+                    _ => Ok(format!("'{}'", self.character(context)?))
                 }
             }
         }
