@@ -1,24 +1,16 @@
-use simple_error::{bail, SimpleResult};
+use simple_error::SimpleResult;
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use sized_number::{Endian, Context};
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
-use crate::basic_type::{Character, CharacterType};
+use crate::{H2Type, H2TypeTrait, Offset};
+use crate::complex_type::H2Array;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct NTString {
     character: H2Type,
 }
-
-// impl From<NTString> for DynamicType {
-//     fn from(o: NTString) -> DynamicType {
-//         DynamicType::from(DynamicType::NTString(o))
-//     }
-// }
 
 impl NTString {
     pub fn new(character: H2Type) -> Self {
@@ -72,27 +64,12 @@ impl H2TypeTrait for NTString {
         Ok(s)
     }
 
-    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
-        bail!("TODO");
-        // let size = self.size(context)?;
-        // let mut result: Vec<ResolvedType> = Vec::new();
+    fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
+        let (size, _) = self.analyze(offset)?;
 
-        // TODO
-        // if size > 1 {
-        //     result.push(ResolvedType::new(context.position(), None,
-        //         StaticType::from(H2Array::new(
-        //             size - 1,
-        //             StaticType::from(Character::new()),
-        //         )),
-        //     ));
-        // }
+        let array = H2Array::new(size, self.character.clone())?;
 
-        // result.push(ResolvedType::new(context.position() + size - 1, None,
-        //     StaticType::from(H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal))
-        // ));
-
-
-        //Ok(result)
+        Ok(vec![(None, array)])
     }
 }
 
@@ -101,6 +78,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::Context;
+    use crate::basic_type::{Character, CharacterType};
 
     #[test]
     fn test_utf8_string() -> SimpleResult<()> {
