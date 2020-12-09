@@ -59,7 +59,17 @@ impl H2TypeTrait for NTString {
     }
 
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        Ok(self.analyze(offset)?.1.iter().collect())
+        // Get the length so we can truncate
+        let (_, chars) = self.analyze(offset)?;
+
+        if chars.len() == 0 {
+            return Ok("".to_string());
+        }
+
+        // Strip the last character (which is the null byte)
+        let s: String = chars[0..(chars.len() - 1)].into_iter().collect();
+
+        Ok(s)
     }
 
     fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
@@ -99,8 +109,43 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8));
-        assert_eq!("AB❄☢𝄞😈÷\0", a.to_string(offset)?);
+        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
     }
+
+    #[test]
+    fn test_zero_length_utf8_string() -> SimpleResult<()> {
+        let data = b"\x00".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a = NTString::new(Character::new(CharacterType::UTF8));
+        assert_eq!("", a.to_string(offset)?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_blank_string() -> SimpleResult<()> {
+        let data = b"".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a = NTString::new(Character::new(CharacterType::UTF8));
+        assert!(a.to_string(offset).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_missing_terminator() -> SimpleResult<()> {
+        //             --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a = NTString::new(Character::new(CharacterType::UTF8));
+        assert!(a.to_string(offset).is_err());
+
+        Ok(())
+    }
+
 }
