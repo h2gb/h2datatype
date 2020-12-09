@@ -21,7 +21,6 @@ pub use h2type::H2Type;
 
 pub mod basic_type;
 pub mod complex_type;
-pub mod dynamic_type;
 
 // #[cfg(test)]
 // mod tests {

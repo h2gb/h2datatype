@@ -6,3 +6,6 @@ pub use h2enum::H2Enum;
 
 mod h2struct;
 pub use h2struct::H2Struct;
+
+mod strings;
+pub use strings::*;
