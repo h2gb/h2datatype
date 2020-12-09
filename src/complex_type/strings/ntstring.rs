@@ -25,7 +25,7 @@ impl NTString {
 
         loop {
             let this_offset = offset.at(position);
-            let this_size = self.character.actual_size(this_offset)?;
+            let this_size = self.character.aligned_size(this_offset)?;
             let this_character = self.character.to_char(this_offset)?;
 
             result.push(this_character);
@@ -79,6 +79,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::Context;
     use crate::basic_type::{Character, CharacterType};
+    use crate::Alignment;
 
     #[test]
     fn test_utf8_string() -> SimpleResult<()> {
@@ -126,5 +127,17 @@ mod tests {
         Ok(())
     }
 
-    // TODO: Test padded characters
+    #[test]
+    fn test_utf8_aligned_characters_string() -> SimpleResult<()> {
+        // We're aligning to 3-byte characters, so 1, 2, and 4 byte characters
+        // get padded
+        //             --    --    ----------  ----------  --------------    --------------    ------
+        let data = b"\x41PP\x42PP\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9EPP\xF0\x9F\x98\x88PP\xc3\xb7P\x00".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8));
+        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
+
+        Ok(())
+    }
 }

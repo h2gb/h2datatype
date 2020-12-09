@@ -75,10 +75,11 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
     use crate::basic_type::{Character, CharacterType, H2Number};
+    use crate::Alignment;
 
     #[test]
     fn test_utf8_lpstring() -> SimpleResult<()> {
-        //             --  --  ----------  ----------  --------------  --------------  ------
+        //                     --  --  ----------  ----------  --------------  --------------  ------
         let data = b"\x00\x07\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
@@ -110,6 +111,19 @@ mod tests {
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
         assert!(a.to_string(offset).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_aligned_length_lpstring() -> SimpleResult<()> {
+        let data = b"\x00\x07PPPPPP\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let size_type = H2Number::new_aligned(Alignment::Loose(8), SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
+
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
     }
