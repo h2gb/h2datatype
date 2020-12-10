@@ -68,12 +68,12 @@ impl H2TypeTrait for NTString {
     }
 
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
-        bail!("TODO");
-        // let (size, _) = self.analyze(offset)?;
+        // We want the number of characters, not the length in bytes
+        let (_, characters) = self.analyze(offset)?;
 
-        // let array = H2Array::new(size, self.character.clone())?;
-
-        // Ok(vec![(None, array)])
+        Ok(vec![
+            (None, H2Array::new(characters.len() as u64, self.character.as_ref().clone())?)
+        ])
     }
 }
 
@@ -145,17 +145,23 @@ mod tests {
         Ok(())
     }
 
-    // #[test]
-    // fn test_utf8_to_array() -> SimpleResult<()> {
-    //     //             --  --  ----------  ----------  --------------  --------------  ------
-    //     let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
-    //     let offset = Offset::Dynamic(Context::new(&data));
+    #[test]
+    fn test_utf8_to_array() -> SimpleResult<()> {
+        //             --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
 
-    //     let a: H2Type = NTString::new(Character::new(CharacterType::UTF8));
-    //     let array = a.resolve(offset, None)?;
+        let a: H2Type = NTString::new(Character::new(CharacterType::UTF8));
+        let array = a.resolve(offset, None)?;
 
-    //     println!("{:?}", array);
+        // Should just have one child - the array
+        assert_eq!(1, array.children.len());
 
-    //     Ok(())
-    // }
+        // The child should be an array of the characters, including the NUL at
+        // the end
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷', '\\0' ]", array.children[0].value);
+        assert_eq!(8, array.children[0].children.len());
+
+        Ok(())
+    }
 }

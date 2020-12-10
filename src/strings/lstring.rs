@@ -66,12 +66,10 @@ impl H2TypeTrait for LString {
         Ok(s)
     }
 
-    fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
-        let (size, _) = self.analyze(offset)?;
-
-        let array = H2Array::new(size, self.character.as_ref().clone())?;
-
-        Ok(vec![(None, array)])
+    fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
+        Ok(vec![
+            ( None, H2Array::new(self.length, self.character.as_ref().clone())? ),
+        ])
     }
 }
 
@@ -112,6 +110,25 @@ mod tests {
 
         let a = LString::new(2, Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_utf8_to_array() -> SimpleResult<()> {
+        //             --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let a: H2Type = LString::new(7, Character::new(CharacterType::UTF8))?;
+        let array = a.resolve(offset, None)?;
+
+        // Should just have one child - the array
+        assert_eq!(1, array.children.len());
+
+        // The child should be an array of the characters
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[0].value);
+        assert_eq!(7, array.children[0].children.len());
 
         Ok(())
     }

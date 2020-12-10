@@ -64,11 +64,13 @@ impl H2TypeTrait for LPString {
     }
 
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
-        let (size, _) = self.analyze(offset)?;
+        let length = self.length.to_u64(offset)?;
 
-        let array = H2Array::new(size, self.character.as_ref().clone())?;
+        Ok(vec![
+            ( Some("size".to_string()), self.length.as_ref().clone() ),
+            ( None,                     H2Array::new(length, self.character.as_ref().clone())? ),
+        ])
 
-        Ok(vec![(None, array)])
     }
 }
 
@@ -131,5 +133,26 @@ mod tests {
         Ok(())
     }
 
-    // TODO: test an aligned size
+    #[test]
+    fn test_utf8_to_array() -> SimpleResult<()> {
+        //                 --  --  ----------  ----------  --------------  --------------  ------
+        let data = b"\x07\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
+        let a: H2Type = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let array = a.resolve(offset, None)?;
+
+        // Should just have two children - the length and the array
+        assert_eq!(2, array.children.len());
+
+        // The first child should just be the length
+        assert_eq!("7", array.children[0].value);
+
+        // The second child should be an array of the characters
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[1].value);
+        assert_eq!(7, array.children[1].children.len());
+
+        Ok(())
+    }
 }
