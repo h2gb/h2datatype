@@ -10,14 +10,12 @@ pub use resolved_type::ResolvedType;
 mod offset;
 pub use offset::Offset;
 
-mod h2types;
-pub use h2types::H2Types;
 
 mod h2typetrait;
 pub use h2typetrait::H2TypeTrait;
 
 mod h2type;
-pub use h2type::H2Type;
+pub use h2type::{H2Types, H2Type};
 
 pub mod basic_type;
 pub mod complex_type;

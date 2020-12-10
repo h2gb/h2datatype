@@ -4,7 +4,33 @@ use std::ops::Range;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{Alignment, H2Types, H2TypeTrait, Offset, ResolvedType};
+use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
+
+use crate::basic_type::*;
+use crate::complex_type::*;
+use crate::strings::*;
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
+pub enum H2Types {
+    // Basic
+    H2Number(H2Number),
+    H2Pointer(H2Pointer),
+    Character(Character),
+
+    IPv4(IPv4),
+    IPv6(IPv6),
+
+    // Complex
+    H2Array(H2Array),
+    H2Enum(H2Enum),
+    H2Struct(H2Struct),
+
+    // Strings
+    LString(LString),
+    NTString(NTString),
+    LPString(LPString),
+}
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
