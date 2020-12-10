@@ -111,6 +111,10 @@ pub trait H2TypeTrait {
             }).collect::<SimpleResult<Vec<ResolvedType>>>()?,
 
             related: self.related(offset)?,
+
+            as_char: self.to_char(offset).ok(),
+            as_u64:  self.to_u64(offset).ok(),
+            as_i64:  self.to_i64(offset).ok(),
         })
     }
 
