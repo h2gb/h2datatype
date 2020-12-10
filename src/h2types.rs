@@ -21,6 +21,8 @@ pub enum H2Types {
     H2Enum(H2Enum),
     H2Struct(H2Struct),
 
-    // Dynamic
-    // NTString(dynamic_type::ntstring::NTString),
+    // Strings
+    LString(LString),
+    NTString(NTString),
+    LPString(LPString),
 }

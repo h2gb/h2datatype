@@ -1,22 +1,26 @@
-use simple_error::SimpleResult;
+use simple_error::{bail, SimpleResult};
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2TypeTrait, Offset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct NTString {
-    character: H2Type,
+    character: Box<H2Type>,
 }
 
 impl NTString {
-    pub fn new(character: H2Type) -> Self {
-        Self {
-            character: character,
-        }
+    pub fn new_aligned(alignment: Alignment, character: H2Type) -> H2Type {
+        H2Type::new(alignment, H2Types::NTString(Self {
+            character: Box::new(character),
+        }))
+    }
+
+    pub fn new(character: H2Type) -> H2Type {
+        Self::new_aligned(Alignment::None, character)
     }
 
     fn analyze(&self, offset: Offset) -> SimpleResult<(u64, Vec<char>)> {
@@ -37,7 +41,6 @@ impl NTString {
         }
 
         Ok((position, result))
-        //bail!("TODO");
     }
 }
 
@@ -65,11 +68,12 @@ impl H2TypeTrait for NTString {
     }
 
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
-        let (size, _) = self.analyze(offset)?;
+        bail!("TODO");
+        // let (size, _) = self.analyze(offset)?;
 
-        let array = H2Array::new(size, self.character.clone())?;
+        // let array = H2Array::new(size, self.character.clone())?;
 
-        Ok(vec![(None, array)])
+        // Ok(vec![(None, array)])
     }
 }
 
@@ -140,4 +144,18 @@ mod tests {
 
         Ok(())
     }
+
+    // #[test]
+    // fn test_utf8_to_array() -> SimpleResult<()> {
+    //     //             --  --  ----------  ----------  --------------  --------------  ------
+    //     let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
+    //     let offset = Offset::Dynamic(Context::new(&data));
+
+    //     let a: H2Type = NTString::new(Character::new(CharacterType::UTF8));
+    //     let array = a.resolve(offset, None)?;
+
+    //     println!("{:?}", array);
+
+    //     Ok(())
+    // }
 }

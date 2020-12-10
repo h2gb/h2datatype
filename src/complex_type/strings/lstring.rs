@@ -1,26 +1,34 @@
-use simple_error::SimpleResult;
+use simple_error::{bail, SimpleResult};
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2TypeTrait, Offset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct LString {
     length: u64,
-    character: H2Type,
+    character: Box<H2Type>,
 }
 
 impl LString {
-    // TODO: Handle 0-length
-    pub fn new(length_in_characters: u64, character: H2Type) -> Self {
-        Self {
-            length: length_in_characters,
-            character: character,
+    pub fn new_aligned(alignment: Alignment, length_in_characters: u64, character: H2Type) -> SimpleResult<H2Type> {
+        if length_in_characters == 0 {
+            bail!("Length must be at least 1 character long");
         }
+
+        Ok(H2Type::new(alignment, H2Types::LString(Self {
+            length: length_in_characters,
+            character: Box::new(character),
+        })))
     }
+
+    pub fn new(length_in_characters: u64, character: H2Type) -> SimpleResult<H2Type> {
+        Self::new_aligned(Alignment::None, length_in_characters, character)
+    }
+
 
     fn analyze(&self, offset: Offset) -> SimpleResult<(u64, Vec<char>)> {
         let mut position = offset.position();
@@ -61,7 +69,7 @@ impl H2TypeTrait for LString {
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         let (size, _) = self.analyze(offset)?;
 
-        let array = H2Array::new(size, self.character.clone())?;
+        let array = H2Array::new(size, self.character.as_ref().clone())?;
 
         Ok(vec![(None, array)])
     }
@@ -80,7 +88,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(7, Character::new(CharacterType::UTF8));
+        let a = LString::new(7, Character::new(CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -91,7 +99,7 @@ mod tests {
         let data = b"\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(1, Character::new(CharacterType::UTF8));
+        let a = LString::new(1, Character::new(CharacterType::UTF8))?;
         assert_eq!("\0", a.to_string(offset)?);
 
         Ok(())
@@ -102,7 +110,7 @@ mod tests {
         let data = b"".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(2, Character::new(CharacterType::UTF8));
+        let a = LString::new(2, Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
 
         Ok(())

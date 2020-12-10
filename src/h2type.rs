@@ -36,8 +36,10 @@ impl H2Type {
             H2Types::H2Enum(t)    => t,
             H2Types::H2Struct(t)  => t,
 
-            // Dynamic
-            // H2Types::NTString(t)  => t,
+            // Strings
+            H2Types::LString(t)   => t,
+            H2Types::NTString(t)  => t,
+            H2Types::LPString(t)  => t,
         }
     }
 

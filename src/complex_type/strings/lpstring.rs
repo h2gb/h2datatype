@@ -3,23 +3,26 @@ use simple_error::SimpleResult;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2TypeTrait, Offset};
+use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct LPString {
-    length: H2Type,
-    character: H2Type,
+    length: Box<H2Type>,
+    character: Box<H2Type>,
 }
 
 impl LPString {
-    // TODO: Handle 0-length
-    pub fn new(length: H2Type, character: H2Type) -> Self {
-        Self {
-            length: length,
-            character: character,
-        }
+    pub fn new_aligned(alignment: Alignment, length: H2Type, character: H2Type) -> H2Type {
+        H2Type::new(alignment, H2Types::LPString(Self {
+            length: Box::new(length),
+            character: Box::new(character),
+        }))
+    }
+
+    pub fn new(length: H2Type, character: H2Type) -> H2Type {
+        Self::new_aligned(Alignment::None, length, character)
     }
 
     fn analyze(&self, offset: Offset) -> SimpleResult<(u64, Vec<char>)> {
@@ -63,7 +66,7 @@ impl H2TypeTrait for LPString {
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         let (size, _) = self.analyze(offset)?;
 
-        let array = H2Array::new(size, self.character.clone())?;
+        let array = H2Array::new(size, self.character.as_ref().clone())?;
 
         Ok(vec![(None, array)])
     }
