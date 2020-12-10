@@ -146,8 +146,16 @@ impl H2TypeTrait for Character {
         }
     }
 
+    fn can_be_char(&self) -> bool {
+        true
+    }
+
     fn to_char(&self, offset: Offset) -> SimpleResult<char> {
         self.character(offset.get_dynamic()?)
+    }
+
+    fn can_be_u64(&self) -> bool {
+        true
     }
 
     fn to_u64(&self, offset: Offset) -> SimpleResult<u64> {

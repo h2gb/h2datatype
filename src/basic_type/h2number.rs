@@ -46,8 +46,16 @@ impl H2TypeTrait for H2Number {
         }
     }
 
+    fn can_be_u64(&self) -> bool {
+        self.definition.can_be_u64()
+    }
+
     fn to_u64(&self, offset: Offset) -> SimpleResult<u64> {
         Ok(self.definition.to_u64(offset.get_dynamic()?)?)
+    }
+
+    fn can_be_i64(&self) -> bool {
+        self.definition.can_be_u64()
     }
 
     fn to_i64(&self, offset: Offset) -> SimpleResult<i64> {

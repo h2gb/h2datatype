@@ -19,6 +19,10 @@ impl LString {
             bail!("Length must be at least 1 character long");
         }
 
+        if !character.can_be_char() {
+            bail!("Character type can't become a character");
+        }
+
         Ok(H2Type::new(alignment, H2Types::LString(Self {
             length: length_in_characters,
             character: Box::new(character),
@@ -77,8 +81,8 @@ impl H2TypeTrait for LString {
 mod tests {
     use super::*;
     use simple_error::SimpleResult;
-    use sized_number::Context;
-    use crate::basic_type::{Character, CharacterType};
+    use sized_number::{Context, Endian};
+    use crate::basic_type::{Character, CharacterType, IPv4};
 
     #[test]
     fn test_utf8_lstring() -> SimpleResult<()> {
@@ -129,6 +133,14 @@ mod tests {
         // The child should be an array of the characters
         assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[0].value);
         assert_eq!(7, array.children[0].children.len());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_bad_type() -> SimpleResult<()> {
+        assert!(LString::new(1, IPv4::new(Endian::Big)).is_err());
+        assert!(LString::new(0, Character::new(CharacterType::UTF8)).is_err());
 
         Ok(())
     }

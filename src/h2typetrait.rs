@@ -114,12 +114,24 @@ pub trait H2TypeTrait {
         })
     }
 
+    fn can_be_char(&self) -> bool {
+        false
+    }
+
     fn to_char(&self, _offset: Offset) -> SimpleResult<char> {
         bail!("This type cannot be converted to a character");
     }
 
+    fn can_be_u64(&self) -> bool {
+        false
+    }
+
     fn to_u64(&self, _offset: Offset) -> SimpleResult<u64> {
         bail!("This type cannot be converted to a u64");
+    }
+
+    fn can_be_i64(&self) -> bool {
+        false
     }
 
     fn to_i64(&self, _offset: Offset) -> SimpleResult<i64> {

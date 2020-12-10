@@ -13,13 +13,17 @@ pub struct NTString {
 }
 
 impl NTString {
-    pub fn new_aligned(alignment: Alignment, character: H2Type) -> H2Type {
-        H2Type::new(alignment, H2Types::NTString(Self {
+    pub fn new_aligned(alignment: Alignment, character: H2Type) -> SimpleResult<H2Type> {
+        if !character.can_be_char() {
+            bail!("Character type can't become a character");
+        }
+
+        Ok(H2Type::new(alignment, H2Types::NTString(Self {
             character: Box::new(character),
-        }))
+        })))
     }
 
-    pub fn new(character: H2Type) -> H2Type {
+    pub fn new(character: H2Type) -> SimpleResult<H2Type> {
         Self::new_aligned(Alignment::None, character)
     }
 
@@ -81,8 +85,8 @@ impl H2TypeTrait for NTString {
 mod tests {
     use super::*;
     use simple_error::SimpleResult;
-    use sized_number::Context;
-    use crate::basic_type::{Character, CharacterType};
+    use sized_number::{Context, Endian};
+    use crate::basic_type::{Character, CharacterType, IPv4};
     use crate::Alignment;
 
     #[test]
@@ -91,7 +95,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let a = NTString::new(Character::new(CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -102,7 +106,7 @@ mod tests {
         let data = b"\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let a = NTString::new(Character::new(CharacterType::UTF8))?;
         assert_eq!("", a.to_string(offset)?);
 
         Ok(())
@@ -113,7 +117,7 @@ mod tests {
         let data = b"".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let a = NTString::new(Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
 
         Ok(())
@@ -125,7 +129,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8));
+        let a = NTString::new(Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
 
         Ok(())
@@ -139,7 +143,7 @@ mod tests {
         let data = b"\x41PP\x42PP\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9EPP\xF0\x9F\x98\x88PP\xc3\xb7P\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8));
+        let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -151,7 +155,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a: H2Type = NTString::new(Character::new(CharacterType::UTF8));
+        let a: H2Type = NTString::new(Character::new(CharacterType::UTF8))?;
         let array = a.resolve(offset, None)?;
 
         // Should just have one child - the array
@@ -162,6 +166,12 @@ mod tests {
         assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷', '\\0' ]", array.children[0].value);
         assert_eq!(8, array.children[0].children.len());
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_bad_character_type() -> SimpleResult<()> {
+        assert!(NTString::new(IPv4::new(Endian::Big)).is_err());
         Ok(())
     }
 }

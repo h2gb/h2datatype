@@ -1,4 +1,4 @@
-use simple_error::SimpleResult;
+use simple_error::{bail, SimpleResult};
 
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
@@ -14,14 +14,22 @@ pub struct LPString {
 }
 
 impl LPString {
-    pub fn new_aligned(alignment: Alignment, length: H2Type, character: H2Type) -> H2Type {
-        H2Type::new(alignment, H2Types::LPString(Self {
+    pub fn new_aligned(alignment: Alignment, length: H2Type, character: H2Type) -> SimpleResult<H2Type> {
+        if !length.can_be_u64() {
+            bail!("Length type can't become a u64");
+        }
+
+        if !character.can_be_char() {
+            bail!("Character type can't become a character");
+        }
+
+        Ok(H2Type::new(alignment, H2Types::LPString(Self {
             length: Box::new(length),
             character: Box::new(character),
-        }))
+        })))
     }
 
-    pub fn new(length: H2Type, character: H2Type) -> H2Type {
+    pub fn new(length: H2Type, character: H2Type) -> SimpleResult<H2Type> {
         Self::new_aligned(Alignment::None, length, character)
     }
 
@@ -79,7 +87,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
-    use crate::basic_type::{Character, CharacterType, H2Number};
+    use crate::basic_type::{Character, CharacterType, H2Number, IPv4};
     use crate::Alignment;
 
     #[test]
@@ -90,7 +98,7 @@ mod tests {
 
         let size_type = H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -102,7 +110,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
         assert_eq!("", a.to_string(offset)?);
 
         Ok(())
@@ -114,7 +122,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
 
         Ok(())
@@ -127,7 +135,7 @@ mod tests {
 
         let size_type = H2Number::new_aligned(Alignment::Loose(8), SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -140,7 +148,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a: H2Type = LPString::new(size_type, Character::new(CharacterType::UTF8));
+        let a: H2Type = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
         let array = a.resolve(offset, None)?;
 
         // Should just have two children - the length and the array
@@ -152,6 +160,17 @@ mod tests {
         // The second child should be an array of the characters
         assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[1].value);
         assert_eq!(7, array.children[1].children.len());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_bad_type() -> SimpleResult<()> {
+        let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
+        assert!(LPString::new(size_type, IPv4::new(Endian::Big)).is_err());
+
+        let size_type = IPv4::new(Endian::Big);
+        assert!(LPString::new(size_type, Character::new(CharacterType::UTF8)).is_err());
 
         Ok(())
     }

@@ -87,8 +87,16 @@ impl H2Type {
         self.field_type().to_string(offset)
     }
 
+    pub fn can_be_char(&self) -> bool {
+        self.field_type().can_be_char()
+    }
+
     pub fn to_char(&self, offset: Offset) -> SimpleResult<char> {
         self.field_type().to_char(offset)
+    }
+
+    pub fn can_be_u64(&self) -> bool {
+        self.field_type().can_be_u64()
     }
 
     pub fn to_u64(&self, offset: Offset) -> SimpleResult<u64> {
@@ -97,5 +105,9 @@ impl H2Type {
 
     pub fn to_i64(&self, offset: Offset) -> SimpleResult<i64> {
         self.field_type().to_i64(offset)
+    }
+
+    pub fn can_be_i64(&self) -> bool {
+        self.field_type().can_be_i64()
     }
 }
