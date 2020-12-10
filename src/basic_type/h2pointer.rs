@@ -1,12 +1,10 @@
-use simple_error::SimpleResult;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+use simple_error::SimpleResult;
 use sized_number::{SizedDefinition, SizedDisplay};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
@@ -17,6 +15,11 @@ pub struct H2Pointer {
     target_type: Box<H2Type>,
 }
 
+/// A pointer type - a numeric type that points to another location.
+///
+/// This is defined very similarly to [`crate::basic_type::H2Number`], with one
+/// additional field: the `target_type`, which is the type of the value that the
+/// pointer points to.
 impl H2Pointer {
     pub fn new_aligned(alignment: Alignment, definition: SizedDefinition, display: SizedDisplay, target_type: H2Type) -> H2Type {
         H2Type::new(alignment, H2Types::H2Pointer(Self {

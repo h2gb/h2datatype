@@ -4,6 +4,18 @@ use std::ops::Range;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+/// Configures the alignment.
+///
+/// When creating a derivative of [`crate::H2Type`], it can be optionally
+/// aligned to a certain value. When aligned, values used in, for example, an
+/// `H2Array` or `NTString` or anywhere else will have their length padded to a
+/// multiple of the alignment value.
+///
+/// If using [`Alignment::Strict`], it not only pads the value to ensure it's a
+/// multiple of the alignment size, it also throws an error if an unaligned
+/// value (that is, a value that doesn't also *start* on a multiple of the
+/// alignment size) is attempted.
+
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum Alignment {
@@ -33,30 +45,27 @@ impl Alignment {
         number - remainder + multiple
     }
 
-    // fn round_down(number: u64, multiple: u64) -> u64 {
-    //     if multiple == 0 {
-    //         return number;
-    //     }
-
-    //     number - (number % multiple)
-    // }
-
     pub fn align(self, range: Range<u64>) -> SimpleResult<Range<u64>> {
         if range.end < range.start {
             bail!("Range ends before it starts");
         }
 
         match self {
+            // Do nothing
             Self::None => Ok(range),
+
+            // Ensure the size is a multiple of the pad value
             Self::Loose(m) => {
                 let new_size = Self::round_up(range.end - range.start, m);
                 Ok(range.start..(range.start + new_size))
             },
             Self::Strict(m) => {
+                // Fail if we didn't start on a pad value
                 if m != 0 && (range.start % m != 0) {
                     bail!("Alignment error");
                 }
 
+                // Pad up to a multiple of the padding sie
                 let new_size = Self::round_up(range.end - range.start, m);
                 Ok(range.start..(range.start + new_size))
             },

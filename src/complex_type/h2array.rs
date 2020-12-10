@@ -1,11 +1,19 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use simple_error::{bail, SimpleResult};
 
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
+
+/// Define an array of values.
+///
+/// An array is one or more elements of the same type that are sequential in
+/// memory. The type can be either static (the size is known in advance) or
+/// dynamic (the size is calculated at runtime and can vary element-to-element).
+///
+/// Arrays can be nested, can contain
+/// [`crate::complex_type::H2Struct`]s/[`crate::complex_type::H2Enum`]s, and can
+/// be as complex or simple as you need.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Array {
@@ -35,9 +43,6 @@ impl H2TypeTrait for H2Array {
         // Offload the is_static() question to the child field type
         self.field_type.is_static()
     }
-
-    //fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
-    //}
 
     fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         // Just clone the child type over and over
@@ -286,48 +291,6 @@ mod tests {
 
         Ok(())
     }
-
-//     #[test]
-//     fn test_nested_array() -> SimpleResult<()> {
-//         let data = b"\x00\x00\x00\x00\x7f\x7f\x7f\x7f\x80\x80\xff\xff".to_vec();
-//         let s_offset = Offset::Static(0);
-//         let d_offset = Offset::Dynamic(Context::new(&data));
-
-//         // An array of 4 4-element I8 arrays that will print as decimal
-//         let t = H2Array::new(4,
-//             H2Array::new(3,
-//                 H2Number::new(SizedDefinition::I8, SizedDisplay::Decimal)
-//             ),
-//         );
-
-//         assert_eq!(12, t.actual_size(s_offset)?);
-//         assert_eq!(12, t.actual_size(d_offset)?);
-
-//         // Should have 4 direct children
-//         assert_eq!(4, t.resolve_partial(s_offset)?.len());
-//         assert_eq!(4, t.resolve_partial(d_offset)?.len());
-
-//         // And a total length of 12
-//         let resolved = t.resolve_full(d_offset)?;
-//         assert_eq!(12, resolved.len());
-
-//         assert_eq!("0",    resolved[0].to_string());
-//         assert_eq!("0",    resolved[1].to_string());
-//         assert_eq!("0",    resolved[2].to_string());
-//         assert_eq!("0",    resolved[3].to_string());
-
-//         assert_eq!("127",  resolved[4].to_string());
-//         assert_eq!("127",  resolved[5].to_string());
-//         assert_eq!("127",  resolved[6].to_string());
-//         assert_eq!("127",  resolved[7].to_string());
-
-//         assert_eq!("-128", resolved[8].to_string());
-//         assert_eq!("-128", resolved[9].to_string());
-//         assert_eq!("-1",  resolved[10].to_string());
-//         assert_eq!("-1",  resolved[11].to_string());
-
-//         Ok(())
-//     }
 
     #[test]
     fn test_dynamic_utf8_array() -> SimpleResult<()> {

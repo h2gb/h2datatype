@@ -6,14 +6,19 @@ use serde::{Serialize, Deserialize};
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
+/// Define a string with a configured length.
+///
+/// The length (in characters) is chosen when creating the type. The length in
+/// bytes may be longer if the character type is non-ASCII, however. See
+/// [`crate::basic_type::Character`] for a list of possible character types.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct LString {
+pub struct H2String {
     length: u64,
     character: Box<H2Type>,
 }
 
-impl LString {
+impl H2String {
     pub fn new_aligned(alignment: Alignment, length_in_characters: u64, character: H2Type) -> SimpleResult<H2Type> {
         if length_in_characters == 0 {
             bail!("Length must be at least 1 character long");
@@ -23,7 +28,7 @@ impl LString {
             bail!("Character type can't become a character");
         }
 
-        Ok(H2Type::new(alignment, H2Types::LString(Self {
+        Ok(H2Type::new(alignment, H2Types::H2String(Self {
             length: length_in_characters,
             character: Box::new(character),
         })))
@@ -51,7 +56,7 @@ impl LString {
     }
 }
 
-impl H2TypeTrait for LString {
+impl H2TypeTrait for H2String {
     fn is_static(&self) -> bool {
         self.character.is_static()
     }
@@ -90,7 +95,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(7, Character::new(CharacterType::UTF8))?;
+        let a = H2String::new(7, Character::new(CharacterType::UTF8))?;
         assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
 
         Ok(())
@@ -101,7 +106,7 @@ mod tests {
         let data = b"\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(1, Character::new(CharacterType::UTF8))?;
+        let a = H2String::new(1, Character::new(CharacterType::UTF8))?;
         assert_eq!("\0", a.to_string(offset)?);
 
         Ok(())
@@ -112,7 +117,7 @@ mod tests {
         let data = b"".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = LString::new(2, Character::new(CharacterType::UTF8))?;
+        let a = H2String::new(2, Character::new(CharacterType::UTF8))?;
         assert!(a.to_string(offset).is_err());
 
         Ok(())
@@ -124,7 +129,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a: H2Type = LString::new(7, Character::new(CharacterType::UTF8))?;
+        let a: H2Type = H2String::new(7, Character::new(CharacterType::UTF8))?;
         let array = a.resolve(offset, None)?;
 
         // Should just have one child - the array
@@ -139,8 +144,8 @@ mod tests {
 
     #[test]
     fn test_bad_type() -> SimpleResult<()> {
-        assert!(LString::new(1, IPv4::new(Endian::Big)).is_err());
-        assert!(LString::new(0, Character::new(CharacterType::UTF8)).is_err());
+        assert!(H2String::new(1, IPv4::new(Endian::Big)).is_err());
+        assert!(H2String::new(0, Character::new(CharacterType::UTF8)).is_err());
 
         Ok(())
     }

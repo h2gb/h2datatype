@@ -1,17 +1,26 @@
-use simple_error::SimpleResult;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+use simple_error::SimpleResult;
 use sized_number::{SizedDefinition, SizedDisplay};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
+/// Define a numerical value.
+///
+/// This represents any standard numerical value - [`u8`], [`i32`], stuff like
+/// that. The way it's defined, read, and displayed heavily leverages the
+/// [`sized_number`] package.
+///
+/// The size a given numeric type is always known in advance.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Number {
+    /// The sign, signedness, and endianness of the value.
     definition: SizedDefinition,
+
+    /// How the value is to be displayed - [`SizedDisplay::Hex`],
+    /// [`SizedDisplay::Octal`], and so on.
     display: SizedDisplay,
 }
 
@@ -199,5 +208,4 @@ mod tests {
 
         Ok(())
     }
-
 }

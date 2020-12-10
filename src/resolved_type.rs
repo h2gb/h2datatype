@@ -17,6 +17,8 @@ pub struct ResolvedType {
 
     pub children: Vec<ResolvedType>,
     pub related: Vec<(u64, H2Type)>,
+
+    // TODO: Add char, u64, and i64 values
 }
 
 impl fmt::Display for ResolvedType {

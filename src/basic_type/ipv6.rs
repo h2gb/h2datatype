@@ -1,13 +1,11 @@
-use simple_error::SimpleResult;
-use std::net::{Ipv6Addr};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+use simple_error::SimpleResult;
 use sized_number::Endian;
+use std::net::Ipv6Addr;
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]

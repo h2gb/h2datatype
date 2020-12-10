@@ -1,11 +1,17 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
+
 use serde::{Serialize, Deserialize};
+use simple_error::{bail, SimpleResult};
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
+/// Define a length-prefixed string.
+///
+/// This is a string with a numerical prefix that denotes the length of the
+/// string (in *characters*). The length is any numerical value as defined in
+/// [`crate::basic_type::H2Number`] (or other numeric types if we add any), and
+/// the character type is any type defined in [`crate::basic_type::Character`].
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct LPString {
@@ -75,10 +81,12 @@ impl H2TypeTrait for LPString {
         let length = self.length.to_u64(offset)?;
 
         Ok(vec![
+            // The size field
             ( Some("size".to_string()), self.length.as_ref().clone() ),
+
+            // The data field
             ( None,                     H2Array::new(length, self.character.as_ref().clone())? ),
         ])
-
     }
 }
 

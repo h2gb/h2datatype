@@ -1,17 +1,21 @@
-use simple_error::{bail, SimpleResult};
-use std::ops::Range;
-use std::cmp;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use simple_error::{bail, SimpleResult};
+use std::cmp;
+use std::ops::Range;
 
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
+
+/// Represents a selection of values that can take up the same memory.
+///
+/// Any number of different types can be defined, and the length of the field
+/// will be the length of the longest one. When resolved, the results will have
+/// the same starting address.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Enum {
-    // An array of strings and types (which might be other types)
+    /// An array of strings and types (which might be other types)
     variants: Vec<(String, H2Type)>,
 }
 
@@ -40,8 +44,8 @@ impl H2TypeTrait for H2Enum {
         }).is_none()
     }
 
-    // We must implement this, because unlike others the end isn't necessarily
-    // the end of the last child
+    /// We must implement this, because unlike others the end isn't necessarily
+    /// the end of the last child
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         // Check each variant's length, saving the longest
         self.variants.iter().try_fold(0, |sum, (_, t)| {
@@ -56,8 +60,8 @@ impl H2TypeTrait for H2Enum {
         }).collect())
     }
 
-    // We must implement this ourselves, because all children will start at the
-    // offset
+    /// We must implement this ourselves, because all children will start at the
+    /// same offset (instead of being sequential)
     fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, Option<String>, H2Type)>> {
         self.variants.iter().map(|(name, field_type)| {
             Ok((field_type.aligned_range(offset)?, Some(name.clone()), field_type.clone()))

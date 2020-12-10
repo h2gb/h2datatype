@@ -1,30 +1,52 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+use simple_error::{bail, SimpleResult};
 use sized_number::{Endian, Context};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
 /// Configure whether invalid ASCII characters are an error or just replaced
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum StrictASCII {
+    /// Throw an error and fail if the string isn't strict ASCII.
     Strict,
+
+    /// Replace ASCII bytes with the unicode "unknown" character.
     Permissive,
 }
 
+/// Selects the format for the character.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum CharacterType {
+    /// Each character is exactly one byte.
+    ///
+    /// The [`StrictASCII`] enum can turn validation on or off.
     ASCII(StrictASCII),
+
+    /// Each character is a UTF-8 codepoint, which is 1 - 4 bytes.
+    ///
+    /// The length of a UTF-8 character is not known in advance.
     UTF8,
+
+    /// Each character is a UTF-16 codepoint, which is either 2 or 4 bytes.
     UTF16(Endian),
+
+    /// Each character is a UTF-32 codepoint, which is always 4 bytes per
+    /// character.
     UTF32(Endian),
 }
 
+/// This represents a Character.
+///
+/// It can read several different types of character, including ASCII, UTF-8
+/// and others (see [`CharacterType`] for a complete list).
+///
+/// This is a mixture of a static and dynamic type, since some character types
+/// (ASCII, UTF-32) are a fixed size, but others (UTF-8, UTF-16) can be
+/// different sizes depending on the context.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct Character {

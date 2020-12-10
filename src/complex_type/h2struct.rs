@@ -1,11 +1,14 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{H2Type, H2Types, H2TypeTrait, Offset};
-use crate::alignment::Alignment;
+use simple_error::{bail, SimpleResult};
 
+use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
+
+/// Define a struct.
+///
+/// A struct is a series of values with a name and a type that are sequential
+/// in memory (with possible alignment).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2Struct {
@@ -38,28 +41,12 @@ impl H2TypeTrait for H2Struct {
         }).is_none()
     }
 
-    // I think the default implementation will work fine
-    // fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
-    //     let resolved = self.resolve_partial(offset)?;
-
-    //     if let Some(first) = resolved.first() {
-    //         if let Some(last) = resolved.last() {
-    //             return Ok(last.aligned_range.end - first.aligned_range.start);
-    //         } else {
-    //             bail!("No elements");
-    //         }
-    //     } else {
-    //         bail!("No elements");
-    //     }
-    // }
-
     fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         Ok(self.fields.iter().map(|(name, field_type)| {
             (Some(name.clone()), field_type.clone())
         }).collect())
     }
 
-    // Get the user-facing name of the type
     fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Because the collect() expects a result, this will end and bubble
         // up errors automatically!
