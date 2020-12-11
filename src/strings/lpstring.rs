@@ -2,6 +2,7 @@
 use serde::{Serialize, Deserialize};
 
 use simple_error::{bail, SimpleResult};
+use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
@@ -67,14 +68,20 @@ impl H2TypeTrait for LPString {
         Ok(self.analyze(offset)?.0)
     }
 
-    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+    fn can_be_string(&self) -> bool {
+        true
+    }
+
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
-        // Strip the last character (which is the null byte)
-        let s: String = chars.into_iter().collect();
+        // Convert into a string
+        Ok(String::from_iter(chars.into_iter()))
+    }
 
-        Ok(s)
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+        Ok(format!("\"{}\"", self.to_string(offset)?))
     }
 
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
@@ -107,7 +114,7 @@ mod tests {
         let size_type = H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
+        assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -119,7 +126,7 @@ mod tests {
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("", a.to_display(offset)?);
+        assert_eq!("\"\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -144,7 +151,7 @@ mod tests {
         let size_type = H2Number::new_aligned(Alignment::Loose(8), SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
+        assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -163,10 +170,10 @@ mod tests {
         assert_eq!(2, array.children.len());
 
         // The first child should just be the length
-        assert_eq!("7", array.children[0].value);
+        assert_eq!("7", array.children[0].display);
 
         // The second child should be an array of the characters
-        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[1].value);
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[1].display);
         assert_eq!(7, array.children[1].children.len());
 
         Ok(())
@@ -195,7 +202,7 @@ mod tests {
 
         assert_eq!(12, t.actual_size(offset)?);
 
-        assert_eq!("[ hi, bye, test ]", t.to_display(offset)?);
+        assert_eq!("[ \"hi\", \"bye\", \"test\" ]", t.to_display(offset)?);
 
         Ok(())
     }

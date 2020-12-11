@@ -1,7 +1,6 @@
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use std::fmt;
 use std::ops::Range;
 
 use crate::H2Type;
@@ -19,20 +18,15 @@ pub struct ResolvedType {
     pub aligned_range: Range<u64>,
 
     pub field_name: Option<String>,
-    pub value: String,
+    pub display: String,
 
     pub children: Vec<ResolvedType>,
     pub related: Vec<(u64, H2Type)>,
 
-    pub as_char: Option<char>,
-    pub as_u64:  Option<u64>,
-    pub as_i64:  Option<i64>,
-}
-
-impl fmt::Display for ResolvedType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.value)
-    }
+    pub as_char:   Option<char>,
+    pub as_string: Option<String>,
+    pub as_u64:    Option<u64>,
+    pub as_i64:    Option<i64>,
 }
 
 impl ResolvedType {

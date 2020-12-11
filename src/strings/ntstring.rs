@@ -2,6 +2,7 @@
 use serde::{Serialize, Deserialize};
 
 use simple_error::{bail, SimpleResult};
+use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
@@ -61,18 +62,20 @@ impl H2TypeTrait for NTString {
         Ok(self.analyze(offset)?.0)
     }
 
-    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+    fn can_be_string(&self) -> bool {
+        true
+    }
+
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
-        if chars.len() == 0 {
-            return Ok("".to_string());
-        }
+        // Convert into a string
+        Ok(String::from_iter(chars[0..(chars.len() - 1)].into_iter()))
+    }
 
-        // Strip the last character (which is the null byte)
-        let s: String = chars[0..(chars.len() - 1)].into_iter().collect();
-
-        Ok(s)
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+        Ok(format!("\"{}\"", self.to_string(offset)?))
     }
 
     fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
@@ -100,7 +103,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
+        assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -111,7 +114,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert_eq!("", a.to_display(offset)?);
+        assert_eq!("\"\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -148,7 +151,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
+        assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
     }
@@ -164,10 +167,12 @@ mod tests {
 
         // Should just have one child - the array
         assert_eq!(1, array.children.len());
+        assert_eq!("AB❄☢𝄞😈÷", array.as_string.unwrap());
+        assert_eq!("\"AB❄☢𝄞😈÷\"", array.display);
 
         // The child should be an array of the characters, including the NUL at
         // the end
-        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷', '\\0' ]", array.children[0].value);
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷', '\\0' ]", array.children[0].display);
         assert_eq!(8, array.children[0].children.len());
 
         Ok(())
@@ -190,7 +195,7 @@ mod tests {
 
         assert_eq!(12, t.actual_size(offset).unwrap());
 
-        assert_eq!("[ hi, bye, test ]", t.to_display(offset).unwrap());
+        assert_eq!("[ \"hi\", \"bye\", \"test\" ]", t.to_display(offset).unwrap());
 
         Ok(())
     }

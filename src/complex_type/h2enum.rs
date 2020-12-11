@@ -142,7 +142,7 @@ mod tests {
         assert_eq!(16, r.aligned_size());
         assert_eq!(3..15, r.actual_range);
         assert_eq!(3..19, r.aligned_range);
-        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", r.value);
+        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 

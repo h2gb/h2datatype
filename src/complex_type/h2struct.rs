@@ -122,7 +122,7 @@ mod tests {
         assert_eq!(15, r.aligned_size());
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
-        assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", r.value);
+        assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(15, r.aligned_size());
         assert_eq!(0..15, r.actual_range);
         assert_eq!(0..15, r.aligned_range);
-        assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", r.value);
+        assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -213,21 +213,21 @@ mod tests {
         assert_eq!(20, r.aligned_size());
         assert_eq!(3..23, r.actual_range);
         assert_eq!(3..23, r.aligned_range);
-        assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", r.value);
+        assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(3, r.children.len());
 
         // Check the first child
         assert_eq!(2, r.children[0].actual_size());
         assert_eq!(4, r.children[0].aligned_size());
-        assert_eq!("0x0001", r.children[0].value);
+        assert_eq!("0x0001", r.children[0].display);
         assert_eq!(0, r.children[0].children.len());
         assert_eq!("hex", r.children[0].field_name.as_ref().unwrap());
 
         // Check the second child
         assert_eq!(12, r.children[1].actual_size());
         assert_eq!(12, r.children[1].aligned_size());
-        assert_eq!("{ A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }", r.children[1].value);
+        assert_eq!("{ A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }", r.children[1].display);
         assert_eq!(4, r.children[1].children.len());
         assert_eq!("struct", r.children[1].field_name.as_ref().unwrap());
 

@@ -191,7 +191,7 @@
 //! assert_eq!(12, t.actual_size(offset).unwrap());
 //!
 //! // Even though it takes up the extra space, the values don't change
-//! assert_eq!("[ hi, bye, test ]", t.to_display(offset).unwrap());
+//! assert_eq!("[ \"hi\", \"bye\", \"test\" ]", t.to_display(offset).unwrap());
 //! ```
 // Lets us use `match` using a `std::ops::Range`
 #![feature(exclusive_range_pattern)]

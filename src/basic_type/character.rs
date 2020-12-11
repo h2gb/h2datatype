@@ -223,7 +223,7 @@ mod tests {
 
         assert_eq!(0, r.children.len());
         assert_eq!(0, r.related.len());
-        assert_eq!("'A'", r.value);
+        assert_eq!("'A'", r.display);
 
         Ok(())
     }
@@ -260,7 +260,7 @@ mod tests {
 
         assert_eq!(0, r.children.len());
         assert_eq!(0, r.related.len());
-        assert_eq!("'A'", r.value);
+        assert_eq!("'A'", r.display);
 
         Ok(())
     }

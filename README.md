@@ -193,5 +193,5 @@ let t = H2Array::new(3, LPString::new(
 assert_eq!(12, t.actual_size(offset).unwrap());
 
 // Even though it takes up the extra space, the values don't change
-assert_eq!("[ hi, bye, test ]", t.to_display(offset).unwrap());
+assert_eq!("[ \"hi\", \"bye\", \"test\" ]", t.to_display(offset).unwrap());
 ```

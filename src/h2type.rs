@@ -154,6 +154,16 @@ impl H2Type {
         self.field_type().to_char(offset)
     }
 
+    /// Can this value represent a [`string`]?
+    pub fn can_be_string(&self) -> bool {
+        self.field_type().can_be_string()
+    }
+
+    /// Try to convert to a [`string`].
+    pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+        self.field_type().to_string(offset)
+    }
+
     /// Can this value represent a [`u64`]?
     pub fn can_be_u64(&self) -> bool {
         self.field_type().can_be_u64()

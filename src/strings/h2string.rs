@@ -2,6 +2,7 @@
 use serde::{Serialize, Deserialize};
 
 use simple_error::{bail, SimpleResult};
+use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
@@ -65,14 +66,20 @@ impl H2TypeTrait for H2String {
         Ok(self.analyze(offset)?.0)
     }
 
-    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+    fn can_be_string(&self) -> bool {
+        true
+    }
+
+    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
-        // Strip the last character (which is the null byte)
-        let s: String = chars.into_iter().collect();
+        // Convert into a string
+        Ok(String::from_iter(chars.into_iter()))
+    }
 
-        Ok(s)
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+        Ok(format!("\"{}\"", self.to_string(offset)?))
     }
 
     fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
@@ -96,25 +103,21 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = H2String::new(7, Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
+        assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
     }
 
     #[test]
     fn test_zero_length_utf8_lstring() -> SimpleResult<()> {
-        let data = b"\x00".to_vec();
-        let offset = Offset::Dynamic(Context::new(&data));
-
-        let a = H2String::new(1, Character::new(CharacterType::UTF8))?;
-        assert_eq!("\0", a.to_display(offset)?);
+        assert!(H2String::new(0, Character::new(CharacterType::UTF8)).is_err());
 
         Ok(())
     }
 
     #[test]
-    fn test_blank_lstring() -> SimpleResult<()> {
-        let data = b"".to_vec();
+    fn test_too_long_lstring() -> SimpleResult<()> {
+        let data = b"A".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = H2String::new(2, Character::new(CharacterType::UTF8))?;
@@ -136,7 +139,7 @@ mod tests {
         assert_eq!(1, array.children.len());
 
         // The child should be an array of the characters
-        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[0].value);
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", array.children[0].display);
         assert_eq!(7, array.children[0].children.len());
 
         Ok(())
@@ -161,7 +164,7 @@ mod tests {
 
         assert_eq!(16, t.actual_size(offset).unwrap());
 
-        assert_eq!("[ AAAA, BBBB, CCCC, DDDD ]", t.to_display(offset).unwrap());
+        assert_eq!("[ \"AAAA\", \"BBBB\", \"CCCC\", \"DDDD\" ]", t.to_display(offset).unwrap());
 
         Ok(())
     }

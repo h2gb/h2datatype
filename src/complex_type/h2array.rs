@@ -92,7 +92,7 @@ mod tests {
         assert_eq!(4, r.aligned_size());
         assert_eq!(0..4, r.actual_range);
         assert_eq!(0..4, r.aligned_range);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.value);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -103,10 +103,10 @@ mod tests {
         assert_eq!(3..4, r.children[3].aligned_range);
 
         // Check the resolved children values
-        assert_eq!("'A'", r.children[0].value);
-        assert_eq!("'B'", r.children[1].value);
-        assert_eq!("'C'", r.children[2].value);
-        assert_eq!("'D'", r.children[3].value);
+        assert_eq!("'A'", r.children[0].display);
+        assert_eq!("'B'", r.children[1].display);
+        assert_eq!("'C'", r.children[2].display);
+        assert_eq!("'D'", r.children[3].display);
 
         Ok(())
     }
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(8, r.aligned_size());
         assert_eq!(0..4, r.actual_range);
         assert_eq!(0..8, r.aligned_range);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.value);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -144,10 +144,10 @@ mod tests {
         assert_eq!(3..4, r.children[3].aligned_range);
 
         // Check the resolved children values
-        assert_eq!("'A'", r.children[0].value);
-        assert_eq!("'B'", r.children[1].value);
-        assert_eq!("'C'", r.children[2].value);
-        assert_eq!("'D'", r.children[3].value);
+        assert_eq!("'A'", r.children[0].display);
+        assert_eq!("'B'", r.children[1].display);
+        assert_eq!("'C'", r.children[2].display);
+        assert_eq!("'D'", r.children[3].display);
 
         Ok(())
     }
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(16, r.aligned_size());
         assert_eq!(0..16, r.actual_range);
         assert_eq!(0..16, r.aligned_range);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.value);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -191,10 +191,10 @@ mod tests {
         assert_eq!(12..16, r.children[3].aligned_range);
 
         // Check the resolved children values
-        assert_eq!("'A'", r.children[0].value);
-        assert_eq!("'B'", r.children[1].value);
-        assert_eq!("'C'", r.children[2].value);
-        assert_eq!("'D'", r.children[3].value);
+        assert_eq!("'A'", r.children[0].display);
+        assert_eq!("'B'", r.children[1].display);
+        assert_eq!("'C'", r.children[2].display);
+        assert_eq!("'D'", r.children[3].display);
 
         Ok(())
     }
@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(20, r.aligned_size());
         assert_eq!(0..16, r.actual_range);
         assert_eq!(0..20, r.aligned_range);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.value);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -238,10 +238,10 @@ mod tests {
         assert_eq!(12..16, r.children[3].aligned_range);
 
         // Check the resolved children values
-        assert_eq!("'A'", r.children[0].value);
-        assert_eq!("'B'", r.children[1].value);
-        assert_eq!("'C'", r.children[2].value);
-        assert_eq!("'D'", r.children[3].value);
+        assert_eq!("'A'", r.children[0].display);
+        assert_eq!("'B'", r.children[1].display);
+        assert_eq!("'C'", r.children[2].display);
+        assert_eq!("'D'", r.children[3].display);
 
         Ok(())
     }
@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(16, r.aligned_size());
         assert_eq!(1..17, r.actual_range);
         assert_eq!(1..17, r.aligned_range);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.value);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", r.display);
         assert_eq!(0, r.related.len());
         assert_eq!(4, r.children.len());
 
@@ -284,10 +284,10 @@ mod tests {
         assert_eq!(13..17, r.children[3].aligned_range);
 
         // Check the resolved children values
-        assert_eq!("'A'", r.children[0].value);
-        assert_eq!("'B'", r.children[1].value);
-        assert_eq!("'C'", r.children[2].value);
-        assert_eq!("'D'", r.children[3].value);
+        assert_eq!("'A'", r.children[0].display);
+        assert_eq!("'B'", r.children[1].display);
+        assert_eq!("'C'", r.children[2].display);
+        assert_eq!("'D'", r.children[3].display);
 
         Ok(())
     }

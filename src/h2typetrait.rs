@@ -146,7 +146,7 @@ pub trait H2TypeTrait {
             aligned_range: self.range(offset, alignment)?,
 
             field_name: field_name,
-            value: self.to_display(offset)?,
+            display: self.to_display(offset)?,
 
             // Resolve the children here and now
             children: self.children_with_range(offset)?.into_iter().map(|(range, name, child)| {
@@ -156,9 +156,10 @@ pub trait H2TypeTrait {
 
             related: self.related(offset)?,
 
-            as_char: self.to_char(offset).ok(),
-            as_u64:  self.to_u64(offset).ok(),
-            as_i64:  self.to_i64(offset).ok(),
+            as_char:   self.to_char(offset).ok(),
+            as_string: self.to_string(offset).ok(),
+            as_u64:    self.to_u64(offset).ok(),
+            as_i64:    self.to_i64(offset).ok(),
         })
     }
 
@@ -176,6 +177,18 @@ pub trait H2TypeTrait {
     /// various [`crate::strings`] types.
     fn to_char(&self, _offset: Offset) -> SimpleResult<char> {
         bail!("This type cannot be converted to a character");
+    }
+
+    /// Can this type output a [`String`] (in general)?
+    ///
+    /// Like [`#can_be_char`], this doesn't have to be perfect.
+    fn can_be_string(&self) -> bool {
+        false
+    }
+
+    /// Convert to a [`String`], if it's sensible for this type.
+    fn to_string(&self, _offset: Offset) -> SimpleResult<String> {
+        bail!("This type cannot be converted to a string");
     }
 
     /// Can this type output a [`u64`] value?
