@@ -15,6 +15,6 @@ BASE=$(git rev-parse --show-toplevel)
 
 # Update README.md
 pushd $BASE > /dev/null
-cargo readme > README.md || err 'Failed to run `cargo readme`!'
+cargo readme | sed 's/\[`/`/g' | sed 's/`\]/`/g' > README.md || err 'Failed to run `cargo readme`!'
 git add README.md
 popd > /dev/null

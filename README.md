@@ -2,35 +2,35 @@
 
 [![Crate](https://img.shields.io/crates/v/sized_number.svg)](https://crates.io/crates/sized_number)
 
-A library for reading datatypes from, ultimately, a [`Vec<u8>`].
+A library for reading datatypes from, ultimately, a `Vec<u8>`.
 
 ## Overview
 
-`h2datatype` is based on the [`H2Type`] type. An [`H2Type`] represents a
+`h2datatype` is based on the `H2Type` type. An `H2Type` represents a
 single contiguous chunk of memory with an optional alignment directive.
 
-An [`H2Type`] can be a basic type or a complex type. While these names are
+An `H2Type` can be a basic type or a complex type. While these names are
 somewhat arbitrary, the essential difference is that basic types are
 fundamental building blocks, and complex types are made up of basic types
 (and other complex types).
 
-An [`H2Type`] is somewhat abstract: it defines what the type is, how to
+An `H2Type` is somewhat abstract: it defines what the type is, how to
 calculate its size, how to convert it to a string, and so on. To calculate
-any of those, an [`Offset`] is required. An [`Offset`] can either be
+any of those, an `Offset` is required. An `Offset` can either be
 abstract (a numeric offset value) or concrete (a buffer of bytes in the form
-of a [`sized_number::Context`]). Some types require a concrete buffer to do
+of a `sized_number::Context`). Some types require a concrete buffer to do
 anything useful (for example, while the length of an IPv4 value doesn't
 change, the length of a UTF-8 character is based on the data).
 
-Pretty much all operations on an [`H2Type`] require an [`Offset`], but
-whether can work with a [`Offset::Static`] or [`Offset::Dynamic`] depends on
+Pretty much all operations on an `H2Type` require an `Offset`, but
+whether can work with a `Offset::Static` or `Offset::Dynamic` depends on
 the implementation.
 
 ### Resolving
 
-An [`H2Type`] can also be *resolved*. It's resolved against a particular
-[`Offset`], and produces a [`ResolvedType`]. A [`ResolvedType`] has all the
-same fields as a [`H2Type`], more or less, but they are now set in stone.
+An `H2Type` can also be *resolved*. It's resolved against a particular
+`Offset`, and produces a `ResolvedType`. A `ResolvedType` has all the
+same fields as a `H2Type`, more or less, but they are now set in stone.
 They can be fetched instantly, and have no chance of returning an error or
 changing - the field has been resolved.
 
@@ -40,34 +40,34 @@ A simple type, as mentioned above, is defined as a type that's not made up
 of other types. The distinction isn't really all that meaningful, it's
 simply a logical grouping.
 
-See the various classes in [`crate::basic_type`] for examples!
+See the various classes in `crate::basic_type` for examples!
 
 ### Complex types
 
 A complex type is made up of other types. For example, a
-[`complex_type::H2Array`] is a series of the same type, a
-[`complex_type::H2Struct`] is a series of different types (with names), and
-a [`complex_type::H2Enum`] is a choice of overlapping values. These can
+`complex_type::H2Array` is a series of the same type, a
+`complex_type::H2Struct` is a series of different types (with names), and
+a `complex_type::H2Enum` is a choice of overlapping values. These can
 be fully recursive - an array can contain a struct which can contain an
 array and so on, for as long as you like.
 
 #### String types
 
-A string type, which are defined in [`strings`], are a special complex
+A string type, which are defined in `strings`, are a special complex
 type. They're really just arrays of a value that can become a character.
 A character can be ASCII, UTF-8, UTF-16, or UTF-32.
 
 ### Alignment
 
-All [`H2Type`] values can be aligned. In the standard case, which is
-[`Alignment::Loose`], an aligned value will always have a size that's
+All `H2Type` values can be aligned. In the standard case, which is
+`Alignment::Loose`, an aligned value will always have a size that's
 a multiple of the alignment value. That means that, for example, a
 string that's 4-byte aligned will always take a total of 4, 8, 12, 16, ...
 bytes of memory. If it ends off a byte boundary, the extra memory is
 consumed as part of range but ultimately ignored.
 
-An alternative type of alignment is [`Alignment::Strict`], which is similar
-to [`Alignment::Loose`], except that the start and end of the aligned value
+An alternative type of alignment is `Alignment::Strict`, which is similar
+to `Alignment::Loose`, except that the start and end of the aligned value
 must both be on an alignment boundary (relative to the start of the buffer).
 That means if the alignment value is 4, all types must start on 0, 4, 8, ...
 and will be padded to end on 4, 8, 12, ...
