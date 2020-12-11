@@ -154,7 +154,7 @@ mod tests {
     fn test_nested_struct() -> SimpleResult<()> {
         //              -- hex --  ----------------struct----------------  ----- ipv4 ----
         //                         -A- -B- ---C--- ----- char_array -----
-        let data = b"XXX\x00\x01pp\x41\x42\x43\x43\x61\x62\x63\x64\x65ppp\x7f\x00\x00\x01".to_vec();
+        let data = b"...\x00\x01pp\x41\x42\x43\x43\x61\x62\x63\x64\x65ppp\x7f\x00\x00\x01".to_vec();
 
         let t = H2Struct::new(vec![
             (
