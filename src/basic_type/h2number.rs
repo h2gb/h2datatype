@@ -46,7 +46,7 @@ impl H2TypeTrait for H2Number {
         Ok(self.definition.size())
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => Ok("Number".to_string()),
             Offset::Dynamic(context) => {
@@ -96,10 +96,10 @@ mod tests {
         assert_eq!(0, t.related(s_offset)?.len());
         assert_eq!(0, t.related(d_offset)?.len());
 
-        assert_eq!("0x00", t.to_string(d_offset.at(0))?);
-        assert_eq!("0x7f", t.to_string(d_offset.at(1))?);
-        assert_eq!("0x80", t.to_string(d_offset.at(2))?);
-        assert_eq!("0xff", t.to_string(d_offset.at(3))?);
+        assert_eq!("0x00", t.to_display(d_offset.at(0))?);
+        assert_eq!("0x7f", t.to_display(d_offset.at(1))?);
+        assert_eq!("0x80", t.to_display(d_offset.at(2))?);
+        assert_eq!("0xff", t.to_display(d_offset.at(3))?);
 
         Ok(())
     }
@@ -121,10 +121,10 @@ mod tests {
         assert_eq!(0, t.related(s_offset)?.len());
         assert_eq!(0, t.related(d_offset)?.len());
 
-        assert_eq!("0",      t.to_string(d_offset.at(0))?);
-        assert_eq!("32767",  t.to_string(d_offset.at(2))?);
-        assert_eq!("-32768", t.to_string(d_offset.at(4))?);
-        assert_eq!("-1",     t.to_string(d_offset.at(6))?);
+        assert_eq!("0",      t.to_display(d_offset.at(0))?);
+        assert_eq!("32767",  t.to_display(d_offset.at(2))?);
+        assert_eq!("-32768", t.to_display(d_offset.at(4))?);
+        assert_eq!("-1",     t.to_display(d_offset.at(6))?);
 
         Ok(())
     }
@@ -165,10 +165,10 @@ mod tests {
         assert_eq!(7..15, t.aligned_range(this_offset)?);
 
         // Make sure the strings are correct
-        assert_eq!("0",      t.to_string(offset.at(0))?);
-        assert_eq!("32767",  t.to_string(offset.at(2))?);
-        assert_eq!("-32768", t.to_string(offset.at(4))?);
-        assert_eq!("-1",     t.to_string(offset.at(6))?);
+        assert_eq!("0",      t.to_display(offset.at(0))?);
+        assert_eq!("32767",  t.to_display(offset.at(2))?);
+        assert_eq!("-32768", t.to_display(offset.at(4))?);
+        assert_eq!("-1",     t.to_display(offset.at(6))?);
 
         Ok(())
     }

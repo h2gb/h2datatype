@@ -69,9 +69,9 @@ impl H2TypeTrait for H2Enum {
         }).collect::<SimpleResult<Vec<_>>>()
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         let strings: Vec<String> = self.children_with_range(offset)?.into_iter().map(|(range, name, child)| {
-            Ok(format!("{}: {}", name.unwrap_or("<name unknown>".to_string()), child.to_string(offset.at(range.start))?))
+            Ok(format!("{}: {}", name.unwrap_or("<name unknown>".to_string()), child.to_display(offset.at(range.start))?))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(format!("{{ {} }}", strings.join(" | ")))
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(16, e.aligned_size(offset)?);
         assert_eq!(3..15, e.actual_range(offset)?);
         assert_eq!(3..19, e.aligned_range(offset)?);
-        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", e.to_string(offset)?);
+        assert_eq!("{ u16: 0x4142 | u32: 0x44434241 | array: [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' ] | u8octal: 0o101 }", e.to_display(offset)?);
         assert_eq!(0, e.related(offset)?.len());
         assert_eq!(4, e.children(offset)?.len());
 

@@ -47,11 +47,11 @@ impl H2TypeTrait for H2Struct {
         }).collect())
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         // Because the collect() expects a result, this will end and bubble
         // up errors automatically!
         let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, name, child)| {
-            Ok(format!("{}: {}", name.clone().unwrap_or("<name unknown>".to_string()), child.to_string(offset.at(range.start))?))
+            Ok(format!("{}: {}", name.clone().unwrap_or("<name unknown>".to_string()), child.to_display(offset.at(range.start))?))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(format!("{{ {} }}", strings.join(", ")))
@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(15, t.aligned_size(offset)?);
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
-        assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", t.to_string(offset)?);
+        assert_eq!("{ field_u32: 0x00010203, field_u16: 0x0001, field_u8: 0o17, field_u32_little: 202182159 }", t.to_display(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
 
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(15, t.aligned_size(offset)?);
         assert_eq!(0..15, t.actual_range(offset)?);
         assert_eq!(0..15, t.aligned_range(offset)?);
-        assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", t.to_string(offset)?);
+        assert_eq!("{ field_u32: Number, field_u16: Number, field_u8: Number, field_u32_little: Number }", t.to_display(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(4, t.children(offset)?.len());
 
@@ -203,7 +203,7 @@ mod tests {
         assert_eq!(20, t.aligned_size(offset)?);
         assert_eq!(3..23, t.actual_range(offset)?);
         assert_eq!(3..23, t.aligned_range(offset)?);
-        assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", t.to_string(offset)?);
+        assert_eq!("{ hex: 0x0001, struct: { A: 0x41, B: 0x42, C: 0x4343, char_array: [ 'a', 'b', 'c', 'd', 'e' ] }, ipv4: 127.0.0.1 }", t.to_display(offset)?);
         assert_eq!(0, t.related(offset)?.len());
         assert_eq!(3, t.children(offset)?.len());
 

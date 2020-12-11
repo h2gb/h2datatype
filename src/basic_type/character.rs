@@ -138,7 +138,7 @@ impl H2TypeTrait for Character {
         }
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => {
                 match self.character_type {
@@ -266,40 +266,40 @@ mod tests {
     }
 
     #[test]
-    fn test_ascii_to_string_permissive() -> SimpleResult<()> {
+    fn test_ascii_to_display_permissive() -> SimpleResult<()> {
         let data = b"\x00\x06\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Permissive));
 
-        assert_eq!("'\\0'",   t.to_string(offset.at(0))?);
-        assert_eq!("'\\x06'", t.to_string(offset.at(1))?);
-        assert_eq!("' '", t.to_string(offset.at(2))?);
-        assert_eq!("'A'", t.to_string(offset.at(3))?);
-        assert_eq!("'B'", t.to_string(offset.at(4))?);
-        assert_eq!("'~'", t.to_string(offset.at(5))?);
-        assert_eq!("'�'", t.to_string(offset.at(6))?);
-        assert_eq!("'�'", t.to_string(offset.at(7))?);
-        assert_eq!("'�'", t.to_string(offset.at(8))?);
+        assert_eq!("'\\0'",   t.to_display(offset.at(0))?);
+        assert_eq!("'\\x06'", t.to_display(offset.at(1))?);
+        assert_eq!("' '", t.to_display(offset.at(2))?);
+        assert_eq!("'A'", t.to_display(offset.at(3))?);
+        assert_eq!("'B'", t.to_display(offset.at(4))?);
+        assert_eq!("'~'", t.to_display(offset.at(5))?);
+        assert_eq!("'�'", t.to_display(offset.at(6))?);
+        assert_eq!("'�'", t.to_display(offset.at(7))?);
+        assert_eq!("'�'", t.to_display(offset.at(8))?);
 
         Ok(())
     }
 
     #[test]
-    fn test_ascii_to_string_strict() -> SimpleResult<()> {
+    fn test_ascii_to_display_strict() -> SimpleResult<()> {
         let data = b"\x00\x06\x20\x41\x42\x7e\x7f\x80\xff".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
         let t = Character::new(CharacterType::ASCII(StrictASCII::Strict));
 
-        assert!(t.to_string(offset.at(6)).is_err());
-        assert!(t.to_string(offset.at(7)).is_err());
-        assert!(t.to_string(offset.at(8)).is_err());
+        assert!(t.to_display(offset.at(6)).is_err());
+        assert!(t.to_display(offset.at(7)).is_err());
+        assert!(t.to_display(offset.at(8)).is_err());
 
-        assert_eq!("'\\0'",   t.to_string(offset.at(0))?);
-        assert_eq!("'\\x06'", t.to_string(offset.at(1))?);
-        assert_eq!("' '",     t.to_string(offset.at(2))?);
-        assert_eq!("'A'",     t.to_string(offset.at(3))?);
-        assert_eq!("'B'",     t.to_string(offset.at(4))?);
-        assert_eq!("'~'",     t.to_string(offset.at(5))?);
+        assert_eq!("'\\0'",   t.to_display(offset.at(0))?);
+        assert_eq!("'\\x06'", t.to_display(offset.at(1))?);
+        assert_eq!("' '",     t.to_display(offset.at(2))?);
+        assert_eq!("'A'",     t.to_display(offset.at(3))?);
+        assert_eq!("'B'",     t.to_display(offset.at(4))?);
+        assert_eq!("'~'",     t.to_display(offset.at(5))?);
 
         Ok(())
     }
@@ -322,18 +322,18 @@ mod tests {
     }
 
     #[test]
-    fn test_utf8_to_string() -> SimpleResult<()> {
+    fn test_utf8_to_display() -> SimpleResult<()> {
         //             --  --  ----------  ----------  --------------  --------------  ------
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("'A'", Character::new(CharacterType::UTF8).to_string(offset.at(0))?);
-        assert_eq!("'B'", Character::new(CharacterType::UTF8).to_string(offset.at(1))?);
-        assert_eq!("'❄'", Character::new(CharacterType::UTF8).to_string(offset.at(2))?);
-        assert_eq!("'☢'", Character::new(CharacterType::UTF8).to_string(offset.at(5))?);
-        assert_eq!("'𝄞'", Character::new(CharacterType::UTF8).to_string(offset.at(8))?);
-        assert_eq!("'😈'", Character::new(CharacterType::UTF8).to_string(offset.at(12))?);
-        assert_eq!("'÷'", Character::new(CharacterType::UTF8).to_string(offset.at(16))?);
+        assert_eq!("'A'", Character::new(CharacterType::UTF8).to_display(offset.at(0))?);
+        assert_eq!("'B'", Character::new(CharacterType::UTF8).to_display(offset.at(1))?);
+        assert_eq!("'❄'", Character::new(CharacterType::UTF8).to_display(offset.at(2))?);
+        assert_eq!("'☢'", Character::new(CharacterType::UTF8).to_display(offset.at(5))?);
+        assert_eq!("'𝄞'", Character::new(CharacterType::UTF8).to_display(offset.at(8))?);
+        assert_eq!("'😈'", Character::new(CharacterType::UTF8).to_display(offset.at(12))?);
+        assert_eq!("'÷'", Character::new(CharacterType::UTF8).to_display(offset.at(16))?);
 
         Ok(())
     }
@@ -343,8 +343,8 @@ mod tests {
         let data = b"\xE2".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert!(Character::new(CharacterType::UTF8).to_string(offset.at(0)).is_err());
-        assert!(Character::new(CharacterType::UTF8).to_string(offset.at(1)).is_err());
+        assert!(Character::new(CharacterType::UTF8).to_display(offset.at(0)).is_err());
+        assert!(Character::new(CharacterType::UTF8).to_display(offset.at(1)).is_err());
 
         Ok(())
     }
@@ -369,69 +369,69 @@ mod tests {
     }
 
     #[test]
-    fn test_utf16_to_string_big_endian() -> SimpleResult<()> {
+    fn test_utf16_to_display_big_endian() -> SimpleResult<()> {
         //           ------------ single -----------  ----------- double ------------
         let data = b"\x00\x41\x00\x42\x27\x44\x26\x22\xD8\x34\xDD\x1E\xD8\x3D\xDE\x08".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("'A'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(0))?);
-        assert_eq!("'B'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(2))?);
-        assert_eq!("'❄'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(4))?);
-        assert_eq!("'☢'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(6))?);
+        assert_eq!("'A'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(0))?);
+        assert_eq!("'B'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(2))?);
+        assert_eq!("'❄'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(4))?);
+        assert_eq!("'☢'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(6))?);
 
         // Double
-        assert_eq!("'𝄞'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(8))?);
-        assert_eq!("'😈'", Character::new(CharacterType::UTF16(Endian::Big)).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(8))?);
+        assert_eq!("'😈'", Character::new(CharacterType::UTF16(Endian::Big)).to_display(offset.at(12))?);
 
         Ok(())
     }
 
     #[test]
-    fn test_utf16_to_string_little_endian() -> SimpleResult<()> {
+    fn test_utf16_to_display_little_endian() -> SimpleResult<()> {
         //           ------------ single -----------  ----------- double ------------
         let data = b"\x41\x00\x42\x00\x44\x27\x22\x26\x34\xd8\x1e\xdd\x3d\xd8\x08\xde".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
         // Single
-        assert_eq!("'A'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(0))?);
-        assert_eq!("'B'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(2))?);
-        assert_eq!("'❄'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(4))?);
-        assert_eq!("'☢'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(6))?);
+        assert_eq!("'A'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(0))?);
+        assert_eq!("'B'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(2))?);
+        assert_eq!("'❄'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(4))?);
+        assert_eq!("'☢'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(6))?);
 
         // Double
-        assert_eq!("'𝄞'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(8))?);
-        assert_eq!("'😈'", Character::new(CharacterType::UTF16(Endian::Little)).to_string(offset.at(12))?);
+        assert_eq!("'𝄞'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(8))?);
+        assert_eq!("'😈'", Character::new(CharacterType::UTF16(Endian::Little)).to_display(offset.at(12))?);
 
         Ok(())
     }
 
     #[test]
-    fn test_utf32_to_string_big_endian() -> SimpleResult<()> {
+    fn test_utf32_to_display_big_endian() -> SimpleResult<()> {
         let data = b"\x00\x00\x00\x41\x00\x00\x00\x42\x00\x00\x27\x44\x00\x00\x26\x22\x00\x01\xD1\x1E\x00\x01\xF6\x08".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("'A'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(0))?);
-        assert_eq!("'B'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(4))?);
-        assert_eq!("'❄'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(8))?);
-        assert_eq!("'☢'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(12))?);
-        assert_eq!("'𝄞'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(16))?);
-        assert_eq!("'😈'", Character::new(CharacterType::UTF32(Endian::Big)).to_string(offset.at(20))?);
+        assert_eq!("'A'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(0))?);
+        assert_eq!("'B'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(4))?);
+        assert_eq!("'❄'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(8))?);
+        assert_eq!("'☢'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(12))?);
+        assert_eq!("'𝄞'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(16))?);
+        assert_eq!("'😈'", Character::new(CharacterType::UTF32(Endian::Big)).to_display(offset.at(20))?);
 
         Ok(())
     }
 
     #[test]
-    fn test_utf32_to_string_little_endian() -> SimpleResult<()> {
+    fn test_utf32_to_display_little_endian() -> SimpleResult<()> {
         let data = b"\x41\x00\x00\x00\x42\x00\x00\x00\x44\x27\x00\x00\x22\x26\x00\x00\x1E\xd1\x01\x00\x08\xf6\x01\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("'A'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(0))?);
-        assert_eq!("'B'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(4))?);
-        assert_eq!("'❄'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(8))?);
-        assert_eq!("'☢'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(12))?);
-        assert_eq!("'𝄞'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(16))?);
-        assert_eq!("'😈'", Character::new(CharacterType::UTF32(Endian::Little)).to_string(offset.at(20))?);
+        assert_eq!("'A'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(0))?);
+        assert_eq!("'B'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(4))?);
+        assert_eq!("'❄'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(8))?);
+        assert_eq!("'☢'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(12))?);
+        assert_eq!("'𝄞'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(16))?);
+        assert_eq!("'😈'", Character::new(CharacterType::UTF32(Endian::Little)).to_display(offset.at(20))?);
 
         Ok(())
     }

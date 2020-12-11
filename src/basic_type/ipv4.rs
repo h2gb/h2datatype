@@ -38,7 +38,7 @@ impl H2TypeTrait for IPv4 {
         Ok(4)
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => Ok("IPv4 Address".to_string()),
             Offset::Dynamic(context) => {
@@ -61,7 +61,7 @@ mod tests {
         let data = b"\x7f\x00\x00\x01".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("127.0.0.1", IPv4::new(Endian::Big).to_string(d_offset)?);
+        assert_eq!("127.0.0.1", IPv4::new(Endian::Big).to_display(d_offset)?);
 
         Ok(())
     }
@@ -71,7 +71,7 @@ mod tests {
         let data = b"\x01\x02\x02\x04".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("4.2.2.1", IPv4::new(Endian::Little).to_string(d_offset)?);
+        assert_eq!("4.2.2.1", IPv4::new(Endian::Little).to_display(d_offset)?);
 
         Ok(())
     }
@@ -81,7 +81,7 @@ mod tests {
         let data = b"\x7f\x00\x00".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert!(IPv4::new(Endian::Big).to_string(d_offset).is_err());
+        assert!(IPv4::new(Endian::Big).to_display(d_offset).is_err());
 
         Ok(())
     }

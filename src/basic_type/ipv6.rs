@@ -38,7 +38,7 @@ impl H2TypeTrait for IPv6 {
         Ok(16)
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
             Offset::Static(_) => Ok("IPv6 Address".to_string()),
             Offset::Dynamic(context) => {
@@ -61,12 +61,12 @@ mod tests {
         let data = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("::", IPv6::new(Endian::Big).to_string(d_offset)?);
+        assert_eq!("::", IPv6::new(Endian::Big).to_display(d_offset)?);
 
         let data = b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("1:203:405:607:809:a0b:c0d:e0f", IPv6::new(Endian::Big).to_string(d_offset)?);
+        assert_eq!("1:203:405:607:809:a0b:c0d:e0f", IPv6::new(Endian::Big).to_display(d_offset)?);
 
         Ok(())
     }
@@ -76,7 +76,7 @@ mod tests {
         let data = b"\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert_eq!("::1", IPv6::new(Endian::Little).to_string(d_offset)?);
+        assert_eq!("::1", IPv6::new(Endian::Little).to_display(d_offset)?);
 
         Ok(())
     }
@@ -86,7 +86,7 @@ mod tests {
         let data = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec();
         let d_offset = Offset::Dynamic(Context::new(&data));
 
-        assert!(IPv6::new(Endian::Big).to_string(d_offset).is_err());
+        assert!(IPv6::new(Endian::Big).to_display(d_offset).is_err());
 
         Ok(())
     }

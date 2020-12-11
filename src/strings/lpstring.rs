@@ -67,7 +67,7 @@ impl H2TypeTrait for LPString {
         Ok(self.analyze(offset)?.0)
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
@@ -107,7 +107,7 @@ mod tests {
         let size_type = H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
+        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
 
         Ok(())
     }
@@ -119,7 +119,7 @@ mod tests {
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("", a.to_string(offset)?);
+        assert_eq!("", a.to_display(offset)?);
 
         Ok(())
     }
@@ -131,7 +131,7 @@ mod tests {
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert!(a.to_string(offset).is_err());
+        assert!(a.to_display(offset).is_err());
 
         Ok(())
     }
@@ -144,7 +144,7 @@ mod tests {
         let size_type = H2Number::new_aligned(Alignment::Loose(8), SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
         let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
+        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
 
         Ok(())
     }
@@ -195,7 +195,7 @@ mod tests {
 
         assert_eq!(12, t.actual_size(offset)?);
 
-        assert_eq!("[ hi, bye, test ]", t.to_string(offset)?);
+        assert_eq!("[ hi, bye, test ]", t.to_display(offset)?);
 
         Ok(())
     }

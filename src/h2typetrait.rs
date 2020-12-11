@@ -81,17 +81,13 @@ pub trait H2TypeTrait {
         alignment.align(start..end)
     }
 
-    // Get the user-facing value of this type.
-    //
-    // For static offsets, this should just be the field name or type.
-    // For dynamic offsets, it should be the actual data, represented as text
     /// Convert to a String.
     ///
     /// This String value is ultimately what is displayed by users, and should
     /// have any formatting that a user would want to see (for example, a
     /// [`crate::basic_type::Character`] renders as `'A'` or `'\t'` or
     /// `'\x01'`.
-    fn to_string(&self, offset: Offset) -> SimpleResult<String>;
+    fn to_display(&self, offset: Offset) -> SimpleResult<String>;
 
     /// Get "related" values - ie, what a pointer points to.
     fn related(&self, _offset: Offset) -> SimpleResult<Vec<(u64, H2Type)>> {
@@ -150,7 +146,7 @@ pub trait H2TypeTrait {
             aligned_range: self.range(offset, alignment)?,
 
             field_name: field_name,
-            value: self.to_string(offset)?,
+            value: self.to_display(offset)?,
 
             // Resolve the children here and now
             children: self.children_with_range(offset)?.into_iter().map(|(range, name, child)| {

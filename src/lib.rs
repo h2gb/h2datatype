@@ -93,10 +93,10 @@
 //! assert_eq!(2, t.aligned_size(offset).unwrap());
 //!
 //! // Read the values at 0, 2, 4, and 8 bytes into the buffer
-//! assert_eq!("0",      t.to_string(offset.at(0)).unwrap());
-//! assert_eq!("32767",  t.to_string(offset.at(2)).unwrap());
-//! assert_eq!("-32768", t.to_string(offset.at(4)).unwrap());
-//! assert_eq!("-1",     t.to_string(offset.at(6)).unwrap());
+//! assert_eq!("0",      t.to_display(offset.at(0)).unwrap());
+//! assert_eq!("32767",  t.to_display(offset.at(2)).unwrap());
+//! assert_eq!("-32768", t.to_display(offset.at(4)).unwrap());
+//! assert_eq!("-1",     t.to_display(offset.at(6)).unwrap());
 //! ```
 //!
 //! ## Alignment
@@ -125,10 +125,10 @@
 //! assert_eq!(4, t.aligned_size(offset).unwrap());
 //!
 //! // Even though it takes up the extra space, the values don't change
-//! assert_eq!("0x0000", t.to_string(offset.at(0)).unwrap());
-//! assert_eq!("0x7fff", t.to_string(offset.at(4)).unwrap());
-//! assert_eq!("0x8000", t.to_string(offset.at(8)).unwrap());
-//! assert_eq!("0xffff", t.to_string(offset.at(12)).unwrap());
+//! assert_eq!("0x0000", t.to_display(offset.at(0)).unwrap());
+//! assert_eq!("0x7fff", t.to_display(offset.at(4)).unwrap());
+//! assert_eq!("0x8000", t.to_display(offset.at(8)).unwrap());
+//! assert_eq!("0xffff", t.to_display(offset.at(12)).unwrap());
 //! ```
 //!
 //! ## Complex types
@@ -156,7 +156,7 @@
 //! assert_eq!(16, t.aligned_size(offset).unwrap());
 //!
 //! // Even though it takes up the extra space, the values don't change
-//! assert_eq!("[ 0x0000, 0x7fff, 0x8000, 0xffff ]", t.to_string(offset.at(0)).unwrap());
+//! assert_eq!("[ 0x0000, 0x7fff, 0x8000, 0xffff ]", t.to_display(offset.at(0)).unwrap());
 //! ```
 //!
 //! ## Dynamic array
@@ -191,7 +191,7 @@
 //! assert_eq!(12, t.actual_size(offset).unwrap());
 //!
 //! // Even though it takes up the extra space, the values don't change
-//! assert_eq!("[ hi, bye, test ]", t.to_string(offset).unwrap());
+//! assert_eq!("[ hi, bye, test ]", t.to_display(offset).unwrap());
 //! ```
 // Lets us use `match` using a `std::ops::Range`
 #![feature(exclusive_range_pattern)]

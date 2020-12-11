@@ -43,9 +43,9 @@ impl H2TypeTrait for H2Pointer {
         Ok(self.definition.size())
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         match offset {
-            Offset::Static(_) => Ok(format!("Pointer to {}", self.target_type.to_string(offset)?)),
+            Offset::Static(_) => Ok(format!("Pointer to {}", self.target_type.to_display(offset)?)),
             Offset::Dynamic(context) => {
                 // Read the current value
                 let target_offset = self.definition.to_u64(context)?;
@@ -53,7 +53,7 @@ impl H2TypeTrait for H2Pointer {
 
                 // Read the target from a separate context
                 let target = Offset::from(context.at(target_offset));
-                let target_display = match self.target_type.to_string(target) {
+                let target_display = match self.target_type.to_display(target) {
                     Ok(v) => v,
                     Err(e) => format!("Invalid pointer target: {}", e),
                 };
@@ -103,7 +103,7 @@ mod tests {
         assert_eq!(2, t.actual_size(d_offset).unwrap());
 
         // Make sure it resolves the other variable
-        assert!(t.to_string(d_offset)?.starts_with("(ref) 0x0008"));
+        assert!(t.to_display(d_offset)?.starts_with("(ref) 0x0008"));
 
         // It has one related value - the int it points to
         assert!(t.related(s_offset).is_err());
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(1, t.actual_size(d_offset).unwrap());
 
         assert_eq!(1, t.related(d_offset)?.len());
-        assert!(t.to_string(d_offset)?.ends_with("0x4142434445464748"));
+        assert!(t.to_display(d_offset)?.ends_with("0x4142434445464748"));
 
         Ok(())
     }

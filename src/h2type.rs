@@ -139,9 +139,9 @@ impl H2Type {
         self.field_type().resolve(offset, self.alignment, name)
     }
 
-    /// Convert to a string.
-    pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
-        self.field_type().to_string(offset)
+    /// Get a user-consumeable string
+    pub fn to_display(&self, offset: Offset) -> SimpleResult<String> {
+        self.field_type().to_display(offset)
     }
 
     /// Can this value represent a [`char`]?

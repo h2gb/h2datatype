@@ -61,7 +61,7 @@ impl H2TypeTrait for NTString {
         Ok(self.analyze(offset)?.0)
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         // Get the length so we can truncate
         let (_, chars) = self.analyze(offset)?;
 
@@ -100,7 +100,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
+        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
 
         Ok(())
     }
@@ -111,7 +111,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert_eq!("", a.to_string(offset)?);
+        assert_eq!("", a.to_display(offset)?);
 
         Ok(())
     }
@@ -122,7 +122,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert!(a.to_string(offset).is_err());
+        assert!(a.to_display(offset).is_err());
 
         Ok(())
     }
@@ -134,7 +134,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new(CharacterType::UTF8))?;
-        assert!(a.to_string(offset).is_err());
+        assert!(a.to_display(offset).is_err());
 
         Ok(())
     }
@@ -148,7 +148,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8))?;
-        assert_eq!("AB❄☢𝄞😈÷", a.to_string(offset)?);
+        assert_eq!("AB❄☢𝄞😈÷", a.to_display(offset)?);
 
         Ok(())
     }
@@ -190,7 +190,7 @@ mod tests {
 
         assert_eq!(12, t.actual_size(offset).unwrap());
 
-        assert_eq!("[ hi, bye, test ]", t.to_string(offset).unwrap());
+        assert_eq!("[ hi, bye, test ]", t.to_display(offset).unwrap());
 
         Ok(())
     }

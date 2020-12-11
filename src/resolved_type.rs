@@ -31,10 +31,7 @@ pub struct ResolvedType {
 
 impl fmt::Display for ResolvedType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.field_name {
-            Some(n) => write!(f, "{}: {}", n, self.value),
-            None    => write!(f, "{}", self.value),
-        }
+        write!(f, "{}", self.value)
     }
 }
 

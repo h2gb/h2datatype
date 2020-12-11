@@ -51,11 +51,11 @@ impl H2TypeTrait for H2Array {
         }).collect())
     }
 
-    fn to_string(&self, offset: Offset) -> SimpleResult<String> {
+    fn to_display(&self, offset: Offset) -> SimpleResult<String> {
         // Because the collect() expects a result, this will end and bubble
         // up errors automatically!
         let strings: Vec<String> = self.children_with_range(offset)?.iter().map(|(range, _name, child)| {
-            child.to_string(offset.at(range.start))
+            child.to_display(offset.at(range.start))
         }).collect::<SimpleResult<Vec<String>>>()?;
 
         Ok(format!("[ {} ]", strings.join(", ")))
@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(4, a.aligned_size(offset)?);
         assert_eq!(0..4, a.actual_range(offset)?);
         assert_eq!(0..4, a.aligned_range(offset)?);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_display(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(8, a.aligned_size(offset)?);
         assert_eq!(0..4, a.actual_range(offset)?);
         assert_eq!(0..8, a.aligned_range(offset)?);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_display(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(16, a.aligned_size(offset)?);
         assert_eq!(0..16,  a.actual_range(offset)?);
         assert_eq!(0..16, a.aligned_range(offset)?);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_display(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
@@ -211,7 +211,7 @@ mod tests {
         assert_eq!(20, a.aligned_size(offset)?);
         assert_eq!(0..16,  a.actual_range(offset)?);
         assert_eq!(0..20, a.aligned_range(offset)?);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_display(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(16, a.aligned_size(offset)?);
         assert_eq!(1..17,  a.actual_range(offset)?);
         assert_eq!(1..17, a.aligned_range(offset)?);
-        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', 'C', 'D' ]", a.to_display(offset)?);
         assert_eq!(0, a.related(offset)?.len());
         assert_eq!(4, a.children(offset)?.len());
 
@@ -300,7 +300,7 @@ mod tests {
 
         let a = H2Array::new(7, Character::new(CharacterType::UTF8))?;
         assert_eq!(18, a.actual_size(offset)?);
-        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", a.to_string(offset)?);
+        assert_eq!("[ 'A', 'B', '❄', '☢', '𝄞', '😈', '÷' ]", a.to_display(offset)?);
 
         Ok(())
     }
