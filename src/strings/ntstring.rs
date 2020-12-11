@@ -48,7 +48,7 @@ impl NTString {
             }
         }
 
-        Ok((position, result))
+        Ok((position - offset.position(), result))
     }
 }
 
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::basic_type::{Character, CharacterType, IPv4};
+    use crate::basic_type::{Character, CharacterType, StrictASCII, IPv4};
     use crate::Alignment;
 
     #[test]
@@ -176,6 +176,22 @@ mod tests {
     #[test]
     fn test_bad_character_type() -> SimpleResult<()> {
         assert!(NTString::new(IPv4::new(Endian::Big)).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_starting_non_zero_offset() -> SimpleResult<()> {
+        let data = b"hi\0bye\0test\0".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let t = H2Array::new(3, NTString::new(
+          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+        )?)?;
+
+        assert_eq!(12, t.actual_size(offset).unwrap());
+
+        assert_eq!("[ hi, bye, test ]", t.to_string(offset).unwrap());
+
         Ok(())
     }
 }

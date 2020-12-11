@@ -191,11 +191,11 @@ mod tests {
         let t = H2Array::new(3, LPString::new(
           H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())),
           Character::new(CharacterType::ASCII(StrictASCII::Strict)),
-        ).unwrap()).unwrap();
+        )?)?;
 
-        assert_eq!(12, t.actual_size(offset).unwrap());
+        assert_eq!(12, t.actual_size(offset)?);
 
-        assert_eq!("[ hi, bye, test ]", t.to_string(offset).unwrap());
+        assert_eq!("[ hi, bye, test ]", t.to_string(offset)?);
 
         Ok(())
     }

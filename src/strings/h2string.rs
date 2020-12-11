@@ -52,7 +52,7 @@ impl H2String {
             position = position + this_size;
         }
 
-        Ok((position, result))
+        Ok((position - offset.position(), result))
     }
 }
 
@@ -87,7 +87,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::basic_type::{Character, CharacterType, IPv4};
+    use crate::basic_type::{Character, CharacterType, StrictASCII, IPv4};
 
     #[test]
     fn test_utf8_lstring() -> SimpleResult<()> {
@@ -146,6 +146,22 @@ mod tests {
     fn test_bad_type() -> SimpleResult<()> {
         assert!(H2String::new(1, IPv4::new(Endian::Big)).is_err());
         assert!(H2String::new(0, Character::new(CharacterType::UTF8)).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_starting_non_zero_offset() -> SimpleResult<()> {
+        let data = b"AAAABBBBCCCCDDDD".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let t = H2Array::new(4, H2String::new(4,
+          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+        )?)?;
+
+        assert_eq!(16, t.actual_size(offset).unwrap());
+
+        assert_eq!("[ AAAA, BBBB, CCCC, DDDD ]", t.to_string(offset).unwrap());
 
         Ok(())
     }
