@@ -5,7 +5,7 @@ use simple_error::{bail, SimpleResult};
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Define a struct.
+/// Defines a struct.
 ///
 /// A struct is a series of values with a name and a type that are sequential
 /// in memory (with possible alignment).

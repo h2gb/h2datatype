@@ -7,7 +7,7 @@ use std::net::Ipv4Addr;
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Reads an IPv4 address.
+/// Defines an IPv4 address.
 ///
 /// An IPv4 address is always represented as a 4-byte value. It's always
 /// displayed in dotted-decimal notation.

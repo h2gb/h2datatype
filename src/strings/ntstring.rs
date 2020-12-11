@@ -1,12 +1,12 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
+
+use simple_error::{bail, SimpleResult};
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
-/// Define a null-terminated string.
+/// Defines a null-terminated string.
 ///
 /// This is a string with a NUL byte at the end (`'\0'`). The character type can
 /// be any type defined in [`crate::basic_type::Character`].

@@ -1,8 +1,8 @@
-use simple_error::{bail, SimpleResult};
-use std::ops::Range;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
+
+use simple_error::{bail, SimpleResult};
+use std::ops::Range;
 
 /// Configures the alignment.
 ///
@@ -15,7 +15,6 @@ use serde::{Serialize, Deserialize};
 /// multiple of the alignment size, it also throws an error if an unaligned
 /// value (that is, a value that doesn't also *start* on a multiple of the
 /// alignment size) is attempted.
-
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum Alignment {

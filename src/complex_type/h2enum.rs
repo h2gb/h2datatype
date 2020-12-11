@@ -7,7 +7,8 @@ use std::ops::Range;
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Represents a selection of values that can take up the same memory.
+/// Defines an enum - a selection of values in the same memory, of which one
+/// is used.
 ///
 /// Any number of different types can be defined, and the length of the field
 /// will be the length of the longest one. When resolved, the results will have

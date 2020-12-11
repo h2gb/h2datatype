@@ -1,12 +1,12 @@
-use simple_error::{bail, SimpleResult};
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
+
+use simple_error::{bail, SimpleResult};
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
-/// Define a string with a configured length.
+/// Defines a string with a configured length.
 ///
 /// The length (in characters) is chosen when creating the type. The length in
 /// bytes may be longer if the character type is non-ASCII, however. See

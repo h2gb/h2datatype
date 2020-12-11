@@ -6,7 +6,7 @@ use sized_number::{SizedDefinition, SizedDisplay};
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Define a numerical value.
+/// Defines a numerical value.
 ///
 /// This represents any standard numerical value - [`u8`], [`i32`], stuff like
 /// that. The way it's defined, read, and displayed heavily leverages the

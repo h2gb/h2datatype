@@ -1,8 +1,15 @@
 use simple_error::{bail, SimpleResult};
 use sized_number::Context;
 
-// Allow us to resolve either statically or dynamically, depending on what's
-// needed. One or the other might throw an error, though.
+/// Represents data that is being parsed.
+///
+/// For some types, such as an integer, a lot can be done without actually
+/// having a buffer: hence, [`Offset::Static`], which works with simply an
+/// offset.
+///
+/// To actually read and parse data, a [`Context`] is required. A [`Context`] is
+/// basically a [`std::io::Cursor`] - a pointer to a buffer of data and a
+/// position.
 #[derive(Debug, Clone, Copy)]
 pub enum Offset<'a> {
     Static(u64),

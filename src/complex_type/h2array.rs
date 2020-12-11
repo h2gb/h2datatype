@@ -5,7 +5,7 @@ use simple_error::{bail, SimpleResult};
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Define an array of values.
+/// Defines an array of values.
 ///
 /// An array is one or more elements of the same type that are sequential in
 /// memory. The type can be either static (the size is known in advance) or

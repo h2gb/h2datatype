@@ -1,12 +1,12 @@
 #[cfg(feature = "serialize")]
-
 use serde::{Serialize, Deserialize};
+
 use simple_error::{bail, SimpleResult};
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
 use crate::complex_type::H2Array;
 
-/// Define a length-prefixed string.
+/// Defines a length-prefixed string.
 ///
 /// This is a string with a numerical prefix that denotes the length of the
 /// string (in *characters*). The length is any numerical value as defined in

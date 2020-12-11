@@ -1,8 +1,13 @@
+//! Types that are made up of other types.
+//!
+//! Keeping these types together in this module are a convention, there's no
+//! firm rule.
+
 mod h2array;
-pub use h2array::H2Array;
+pub use h2array::*;
 
 mod h2enum;
-pub use h2enum::H2Enum;
+pub use h2enum::*;
 
 mod h2struct;
-pub use h2struct::H2Struct;
+pub use h2struct::*;

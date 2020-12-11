@@ -1,11 +1,10 @@
-use simple_error::SimpleResult;
-use std::ops::Range;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
-use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
+use simple_error::SimpleResult;
+use std::ops::Range;
 
+use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
 use crate::basic_type::*;
 use crate::complex_type::*;
 use crate::strings::*;

@@ -1,14 +1,19 @@
+//! Types that don't have subtypes.
+//!
+//! Keeping these types together in this module are a convention, there's no
+//! firm rule.
+
 mod h2number;
-pub use h2number::H2Number;
+pub use h2number::*;
 
 mod h2pointer;
-pub use h2pointer::H2Pointer;
+pub use h2pointer::*;
 
 mod ipv4;
-pub use ipv4::IPv4;
+pub use ipv4::*;
 
 mod ipv6;
-pub use ipv6::IPv6;
+pub use ipv6::*;
 
 mod character;
-pub use character::{Character, CharacterType, StrictASCII};
+pub use character::*;

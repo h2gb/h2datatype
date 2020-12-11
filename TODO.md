@@ -5,3 +5,4 @@ Things I want to add:
 * Make sure I'm not converting u64 to usize
 * Write examples
 * Do I need H2Pointer at all?
+* If an array is static, simplify the size

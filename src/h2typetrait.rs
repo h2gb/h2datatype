@@ -3,19 +3,43 @@ use std::ops::Range;
 
 use crate::{Alignment, Offset, ResolvedType, H2Type};
 
+/// The core trait that makes a type into a type. All types must implement this.
+///
+/// # Type consumers
+///
+/// Consumers really don't need to know much about this trait - check out
+/// [`H2Type`] instead. Everything in here can be consumed through that, and the
+/// function documentation is targeted towards consumers, not implementors!
+///
+/// # Type developers
+///
+/// As a type developer, some of the traits must be implemented (obviously),
+/// while others have sane defaults that you can rely on. In some cases, if the
+/// default behaviour doesn't make sense for you (for example,
+/// [`crate::complex_type::h2enum`] doesn't have sequential children), or if you
+/// can implement it faster, feel free to override it.
+///
+/// The `actual_size` function is particularly to implement for any types that
+/// aren't 100% composed of other types. By default, we subtract the last
+/// address of the last child from the first address of the first, but
+/// basic_types have no children.
 pub trait H2TypeTrait {
-    // Can all the elements be calculated ahead of time?
+    /// Can information (like size and children) be retrieved without context?
+    ///
+    /// I'm not entirely sure if this is meaningful anymore, but I'm keeping it
+    /// anyways (for now)!
     fn is_static(&self) -> bool;
 
-    // What's the size of the field (with no padding, though children will have padding here)
-    //
-    // We have a default implementation that resolves children, then takes the
-    // end of the last and subtracts the start of the first. That can be really
-    // slow, and only works with children, so implementations will frequently
-    // want their own, I think.
-    //
-    // This also assumes that the last child has the last address. That doesn't
-    // work for, say, H2Enum
+    /// The actual size, in bytes, of a type. This does not include alignment
+    /// or padding.
+    ///
+    /// By default, this will resolve the type's children and subtract the
+    /// start of the first child from the end of the last. For types with
+    /// children that fully cover their range, this is a reasonable implementation,
+    /// but there may be more efficient ways.
+    ///
+    /// Types without children - in general, [`crate::basic_type`]s - must also
+    /// implement this. Without children, we can't tell.
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         let children = self.children_with_range(offset)?;
 
@@ -33,13 +57,21 @@ pub trait H2TypeTrait {
         Ok(last_range.end - first_range.start)
     }
 
-    /// Size including padding either before or after
+    /// Get the aligned size.
+    ///
+    /// The default implementation is very likely fine for this.
     fn aligned_size(&self, offset: Offset, alignment: Alignment) -> SimpleResult<u64> {
         let range = self.range(offset, alignment)?;
 
         Ok(range.end - range.start)
     }
 
+    /// Get the start and ending positions. To get the range without alignment,
+    /// use [`Alignment::None`].
+    ///
+    /// The default implementation is very likely good. This is only
+    /// implemented as a trait function because other trait functions (such as
+    /// [`#resolve`]) use it.
     fn range(&self, offset: Offset, alignment: Alignment) -> SimpleResult<Range<u64>> {
         // Get the start and end
         let start = offset.position();
@@ -53,25 +85,49 @@ pub trait H2TypeTrait {
     //
     // For static offsets, this should just be the field name or type.
     // For dynamic offsets, it should be the actual data, represented as text
+    /// Convert to a String.
+    ///
+    /// This String value is ultimately what is displayed by users, and should
+    /// have any formatting that a user would want to see (for example, a
+    /// [`crate::basic_type::Character`] renders as `'A'` or `'\t'` or
+    /// `'\x01'`.
     fn to_string(&self, offset: Offset) -> SimpleResult<String>;
 
-    // Get "related" values - ie, what a pointer points to.
-    //
-    // Default: none
+    /// Get "related" values - ie, what a pointer points to.
     fn related(&self, _offset: Offset) -> SimpleResult<Vec<(u64, H2Type)>> {
         Ok(vec![])
     }
 
-    // Get the children as a vector of abstract H2Type values. This should be
-    // implemented by any complex type that has subtypes.
+    /// Get children of the type - that is, other types that make up this type.
+    ///
+    /// Some types have no children - we refer to those as
+    /// [`crate::basic_type`]s.
+    ///
+    /// For types that DO have children, with one exception the types follow
+    /// some guidelines:
+    ///
+    /// * Children are ordered and consecutive (with possible alignment).
+    ///
+    /// * Children take up the full type - that is, the type starts at the
+    ///   first byte of the first child, and ends at the last byte of the last
+    ///   child (with possible alignment).
+    ///
+    /// The one type that breaks this rule is [`crate::complex_type::H2Enum`],
+    /// where all values overlap (since that's how an enum works).
+    ///
+    /// Provided your children follow those rules, [`#actual_size`] and
+    /// [`#children_with_range`] and [`#resolve`] will work with their default
+    /// implementations.
     fn children(&self, _offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         Ok(vec![])
     }
 
-    // Get a list of children types, and attach a range to each one based on its
-    // size.
-    //
-    // There should be no need to override this.
+    /// Get a list of children with their associated (aligned) ranges.
+    ///
+    /// As notes in [`#children`], the default implementation assumes that the
+    /// children are consecutive, adjacent, and make up the full parent type.
+    /// As long as that's the case, the default implementation will work just
+    /// fine.
     fn children_with_range(&self, offset: Offset) -> SimpleResult<Vec<(Range<u64>, Option<String>, H2Type)>> {
         let mut child_offset = offset;
 
@@ -81,21 +137,13 @@ pub trait H2TypeTrait {
             child_offset = offset.at(range.end);
 
             Ok((range, name, child.clone()))
-            //// I'm not sure if this is a good idea, but...
-            ////
-            //// This ensures that the array field starts in the same "place"
-            //// in every element of the array. I think that makes sense to my
-            //// brain, but I'm not sure I like having this special case...
-            //if let Alignment::Loose(a) = self.field_type.alignment {
-            //    start = start + a;
-            //} else {
-            //    start = start + self.field_type.aligned_size(this_offset)?;
-            //}
         }).collect::<SimpleResult<Vec<_>>>()
     }
 
-    // Convert an abstract type to a concrete type. This is used recursively
-    // to resolve children
+    /// Create a [`ResolvedType`] from this [`H2Type`] and context.
+    ///
+    /// A resolved type has all the values calculated, and is therefore very
+    /// quick to use.
     fn resolve(&self, offset: Offset, alignment: Alignment, field_name: Option<String>) -> SimpleResult<ResolvedType> {
         Ok(ResolvedType {
             actual_range: self.range(offset, Alignment::None)?,
@@ -118,26 +166,44 @@ pub trait H2TypeTrait {
         })
     }
 
+    /// Can this type output a [`char`] (in general)?
+    ///
+    /// This doesn't have to be perfect, but it helps create errors early if
+    /// a developer tries to use it to make a string or something.
     fn can_be_char(&self) -> bool {
         false
     }
 
+    /// Convert to a [`char`], if it's sensible for this type.
+    ///
+    /// Types that can become a [`char`] can be used as part of one of the
+    /// various [`crate::strings`] types.
     fn to_char(&self, _offset: Offset) -> SimpleResult<char> {
         bail!("This type cannot be converted to a character");
     }
 
+    /// Can this type output a [`u64`] value?
+    ///
+    /// Like [`#can_be_char`], this doesn't have to be perfect.
     fn can_be_u64(&self) -> bool {
         false
     }
 
+    /// Convert to a [`u64`]. This lets a type be usable for string lengths,
+    /// pointer offsets, stuff like that.
     fn to_u64(&self, _offset: Offset) -> SimpleResult<u64> {
         bail!("This type cannot be converted to a u64");
     }
 
+    /// Can this type output a [`i64`] value?
+    ///
+    /// Like [`#can_be_char`], this doesn't have to be perfect.
     fn can_be_i64(&self) -> bool {
         false
     }
 
+    /// Convert to an [`i64`]. Currently, nothing consumes this, but I imagine
+    /// that relative offsets and stuff will want to use this.
     fn to_i64(&self, _offset: Offset) -> SimpleResult<i64> {
         bail!("This type cannot be converted to a i64");
     }

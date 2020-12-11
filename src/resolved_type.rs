@@ -1,11 +1,17 @@
-use std::ops::Range;
-use std::fmt;
-
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 
+use std::fmt;
+use std::ops::Range;
+
 use crate::H2Type;
 
+/// The result of an [`H2Type`] being applied to a context.
+///
+/// Ultimately, a [`ResolvedType`] is "concrete" - that is, everything is
+/// set in stone and unchanging. That means that getting information from it
+/// is zero-cost, and requests can't fail (since they aren't working on
+/// unexpected data).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct ResolvedType {

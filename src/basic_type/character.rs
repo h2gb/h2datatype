@@ -6,7 +6,7 @@ use sized_number::{Endian, Context};
 
 use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
-/// Configure whether invalid ASCII characters are an error or just replaced
+/// Configuration options for ASCII characters.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum StrictASCII {
@@ -17,7 +17,7 @@ pub enum StrictASCII {
     Permissive,
 }
 
-/// Selects the format for the character.
+/// Choices for character types for [`Character`] values (ASCII, UTF-8, etc.)
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum CharacterType {
@@ -39,7 +39,7 @@ pub enum CharacterType {
     UTF32(Endian),
 }
 
-/// This represents a Character.
+/// Defines a Character value.
 ///
 /// It can read several different types of character, including ASCII, UTF-8
 /// and others (see [`CharacterType`] for a complete list).
