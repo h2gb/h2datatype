@@ -239,10 +239,4 @@ mod tests {
 
         Ok(())
     }
-
-    #[test]
-    fn test_dynamically_sized_struct() -> SimpleResult<()> {
-        // TODO
-        Ok(())
-    }
 }
