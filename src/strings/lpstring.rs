@@ -54,7 +54,7 @@ impl LPString {
             position = position + this_size;
         }
 
-        Ok((position, result))
+        Ok((position - offset.position(), result))
     }
 }
 
@@ -95,7 +95,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
-    use crate::basic_type::{Character, CharacterType, H2Number, IPv4};
+    use crate::basic_type::{Character, CharacterType, StrictASCII, H2Number, IPv4};
     use crate::Alignment;
 
     #[test]
@@ -179,6 +179,23 @@ mod tests {
 
         let size_type = IPv4::new(Endian::Big);
         assert!(LPString::new(size_type, Character::new(CharacterType::UTF8)).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_starting_non_zero_offset() -> SimpleResult<()> {
+        let data = b"\x02hi\x03bye\x04test".to_vec();
+        let offset = Offset::Dynamic(Context::new(&data));
+
+        let t = H2Array::new(3, LPString::new(
+          H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())),
+          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+        ).unwrap()).unwrap();
+
+        assert_eq!(12, t.actual_size(offset).unwrap());
+
+        assert_eq!("[ hi, bye, test ]", t.to_string(offset).unwrap());
 
         Ok(())
     }
