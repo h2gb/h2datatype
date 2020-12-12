@@ -5,8 +5,8 @@ use simple_error::SimpleResult;
 use std::ops::Range;
 
 use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
-use crate::basic_type::*;
-use crate::complex_type::*;
+use crate::simple::*;
+use crate::composite::*;
 
 /// An enum used to multiplex between the various types.
 ///
@@ -36,9 +36,9 @@ pub enum H2Types {
 ///
 /// In general, when consuming this crate, you probably won't be creating an
 /// `H2Type` directly; rather, use the `new()` or `new_aligned()` function of
-/// any of the various types defined in [`crate::basic_type`],
-/// [`crate::complex_type`], or [`crate::strings`]. Those `new()` functions
-/// return an `H2Type`.
+/// any of the various types defined in [`crate::simple`],
+/// [`crate::composite`], or [`crate::composite::strings`]. Those `new()`
+/// functions return an `H2Type`.
 ///
 /// Please note that many of the functions here are very expensive, because
 /// they have to read the object and iterate every time they're called. If you
@@ -65,7 +65,7 @@ impl H2Type {
 
     fn field_type(&self) -> &dyn H2TypeTrait {
         match &self.field {
-            // Basic
+            // Simple
             H2Types::H2Number(t)  => t,
             H2Types::H2Pointer(t) => t,
             H2Types::Character(t) => t,
@@ -93,7 +93,7 @@ impl H2Type {
     /// Get the size of just the field - no alignment included.
     ///
     /// Note that if the type has children (such as a
-    /// [`crate::complex_type::H2Array`], the alignment on THAT is included
+    /// [`crate::composite::H2Array`], the alignment on THAT is included
     /// since that's part of the actual object.
     pub fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         self.field_type().actual_size(offset)
@@ -123,8 +123,8 @@ impl H2Type {
     /// Get the types that make up the given type.
     ///
     /// Some types don't have children, they are essentially leaf notes. Others
-    /// (such as [`crate::complex_type::H2Array`] and
-    /// [`crate::strings::NTString`]) do.
+    /// (such as [`H2Array`] and
+    /// [`NTString`]) do.
     pub fn children(&self, offset: Offset) -> SimpleResult<Vec<(Option<String>, H2Type)>> {
         self.field_type().children(offset)
     }
@@ -153,12 +153,12 @@ impl H2Type {
         self.field_type().to_char(offset)
     }
 
-    /// Can this value represent a [`string`]?
+    /// Can this value represent a [`String`]?
     pub fn can_be_string(&self) -> bool {
         self.field_type().can_be_string()
     }
 
-    /// Try to convert to a [`string`].
+    /// Try to convert to a [`String`].
     pub fn to_string(&self, offset: Offset) -> SimpleResult<String> {
         self.field_type().to_string(offset)
     }

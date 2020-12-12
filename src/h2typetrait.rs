@@ -16,13 +16,13 @@ use crate::{Alignment, Offset, ResolvedType, H2Type};
 /// As a type developer, some of the traits must be implemented (obviously),
 /// while others have sane defaults that you can rely on. In some cases, if the
 /// default behaviour doesn't make sense for you (for example,
-/// [`crate::complex_type::h2enum`] doesn't have sequential children), or if you
+/// [`crate::composite::h2enum`] doesn't have sequential children), or if you
 /// can implement it faster, feel free to override it.
 ///
 /// The `actual_size` function is particularly to implement for any types that
 /// aren't 100% composed of other types. By default, we subtract the last
 /// address of the last child from the first address of the first, but
-/// basic_types have no children.
+/// simple types have no children.
 pub trait H2TypeTrait {
     /// Can information (like size and children) be retrieved without context?
     ///
@@ -38,7 +38,7 @@ pub trait H2TypeTrait {
     /// children that fully cover their range, this is a reasonable implementation,
     /// but there may be more efficient ways.
     ///
-    /// Types without children - in general, [`crate::basic_type`]s - must also
+    /// Types without children - in general, [`crate::simple`]s - must also
     /// implement this. Without children, we can't tell.
     fn actual_size(&self, offset: Offset) -> SimpleResult<u64> {
         let children = self.children_with_range(offset)?;
@@ -85,7 +85,7 @@ pub trait H2TypeTrait {
     ///
     /// This String value is ultimately what is displayed by users, and should
     /// have any formatting that a user would want to see (for example, a
-    /// [`crate::basic_type::Character`] renders as `'A'` or `'\t'` or
+    /// [`crate::simple::Character`] renders as `'A'` or `'\t'` or
     /// `'\x01'`.
     fn to_display(&self, offset: Offset) -> SimpleResult<String>;
 
@@ -97,7 +97,7 @@ pub trait H2TypeTrait {
     /// Get children of the type - that is, other types that make up this type.
     ///
     /// Some types have no children - we refer to those as
-    /// [`crate::basic_type`]s.
+    /// [`crate::simple`]s.
     ///
     /// For types that DO have children, with one exception the types follow
     /// some guidelines:
@@ -108,7 +108,7 @@ pub trait H2TypeTrait {
     ///   first byte of the first child, and ends at the last byte of the last
     ///   child (with possible alignment).
     ///
-    /// The one type that breaks this rule is [`crate::complex_type::H2Enum`],
+    /// The one type that breaks this rule is [`crate::composite::H2Enum`],
     /// where all values overlap (since that's how an enum works).
     ///
     /// Provided your children follow those rules, [`#actual_size`] and
@@ -174,7 +174,7 @@ pub trait H2TypeTrait {
     /// Convert to a [`char`], if it's sensible for this type.
     ///
     /// Types that can become a [`char`] can be used as part of one of the
-    /// various [`crate::strings`] types.
+    /// various [`crate::composite::strings`] types.
     fn to_char(&self, _offset: Offset) -> SimpleResult<char> {
         bail!("This type cannot be converted to a character");
     }

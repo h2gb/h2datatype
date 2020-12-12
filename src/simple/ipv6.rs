@@ -10,7 +10,7 @@ use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 /// Defines an IPv6 address.
 ///
 /// An IPv6 address is always represented as a 4-byte value. It's always
-/// displayed in dotted-decimal notation.
+/// displayed in standard colon notation.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct IPv6 {

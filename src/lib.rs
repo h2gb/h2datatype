@@ -7,10 +7,10 @@
 //! `h2datatype` is based on the [`H2Type`] type. An [`H2Type`] represents a
 //! single contiguous chunk of memory with an optional alignment directive.
 //!
-//! An [`H2Type`] can be a basic type or a complex type. While these names are
-//! somewhat arbitrary, the essential difference is that basic types are
-//! fundamental building blocks, and complex types are made up of basic types
-//! (and other complex types).
+//! An [`H2Type`] can be a simple type or a composite type. While these names
+//! are somewhat arbitrary, the essential difference is that simple types are
+//! fundamental building blocks, and composite types are made up of simple types
+//! (and other composite types).
 //!
 //! An [`H2Type`] is somewhat abstract: it defines what the type is, how to
 //! calculate its size, how to convert it to a string, and so on. To calculate
@@ -38,31 +38,31 @@
 //! of other types. The distinction isn't really all that meaningful, it's
 //! simply a logical grouping.
 //!
-//! See the various classes in [`crate::basic_type`] for examples!
+//! See the various classes in [`crate::simple`] for examples!
 //!
-//! ## Complex types
+//! ## Composite types
 //!
-//! A complex type is made up of other types. For example, a
-//! [`complex_type::H2Array`] is a series of the same type, a
-//! [`complex_type::H2Struct`] is a series of different types (with names), and
-//! a [`complex_type::H2Enum`] is a choice of overlapping values. These can
-//! be fully recursive - an array can contain a struct which can contain an
-//! array and so on, for as long as you like.
+//! A composite type is made up of other types. For example, a
+//! [`composite::H2Array`] is a series of the same type, a
+//! [`composite::H2Struct`] is a series of different types (with names), and a
+//! [`composite::H2Enum`] is a choice of overlapping values. These can be fully
+//! recursive - an array can contain a struct which can contain an array and so
+//! on, for as long as you like.
 //!
 //! ### String types
 //!
-//! A string type, which are defined in [`crate::complex_type::strings`], are a
-//! special complex type. They're really just arrays of a value that can
-//! consume a character type in some way to become a String.
+//! A string type, which are defined in [`composite::strings`], are a special
+//! composite type. They're really just arrays of a value that can consume a
+//! character type in some way to become a String.
 //!
 //! ## Alignment
 //!
 //! All [`H2Type`] values can be aligned. In the standard case, which is
-//! [`Alignment::Loose`], an aligned value will always have a size that's
-//! a multiple of the alignment value. That means that, for example, a
-//! string that's 4-byte aligned will always take a total of 4, 8, 12, 16, ...
-//! bytes of memory. If it ends off a byte boundary, the extra memory is
-//! consumed as part of range but ultimately ignored.
+//! [`Alignment::Loose`], an aligned value will always have a size that's a
+//! multiple of the alignment value. That means that, for example, a string
+//! that's 4-byte aligned will always take a total of 4, 8, 12, 16, ... bytes of
+//! memory. If it ends off a byte boundary, the extra memory is consumed as part
+//! of range but ultimately ignored.
 //!
 //! An alternative type of alignment is [`Alignment::Strict`], which is similar
 //! to [`Alignment::Loose`], except that the start and end of the aligned value
@@ -76,7 +76,7 @@
 //!
 //! ```
 //! use h2datatype::*;
-//! use h2datatype::basic_type::*;
+//! use h2datatype::simple::*;
 //! use sized_number::*;
 //!
 //! // This is our buffer
@@ -103,7 +103,7 @@
 //!
 //! ```
 //! use h2datatype::*;
-//! use h2datatype::basic_type::*;
+//! use h2datatype::simple::*;
 //! use sized_number::*;
 //!
 //! // This is our buffer - the PP represents padding for alignment
@@ -131,12 +131,12 @@
 //! assert_eq!("0xffff", t.to_display(offset.at(12)).unwrap());
 //! ```
 //!
-//! ## Complex types
+//! ## Composite types
 //!
 //! ```
 //! use h2datatype::*;
-//! use h2datatype::basic_type::*;
-//! use h2datatype::complex_type::*;
+//! use h2datatype::simple::*;
+//! use h2datatype::composite::*;
 //! use sized_number::*;
 //!
 //! // This is our buffer - the PP represents padding for alignment
@@ -166,8 +166,8 @@
 //!
 //! ```
 //! use h2datatype::*;
-//! use h2datatype::basic_type::*;
-//! use h2datatype::complex_type::*;
+//! use h2datatype::simple::*;
+//! use h2datatype::composite::*;
 //! use sized_number::*;
 //!
 //! // This is our buffer - three strings with a one-byte length prefix
@@ -210,5 +210,5 @@ pub use h2typetrait::H2TypeTrait;
 mod h2type;
 pub use h2type::{H2Types, H2Type};
 
-pub mod basic_type;
-pub mod complex_type;
+pub mod simple;
+pub mod composite;

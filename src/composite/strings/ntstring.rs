@@ -5,12 +5,12 @@ use simple_error::{bail, SimpleResult};
 use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
-use crate::complex_type::H2Array;
+use crate::composite::H2Array;
 
 /// Defines a null-terminated string.
 ///
 /// This is a string with a NUL byte at the end (`'\0'`). The character type can
-/// be any type defined in [`crate::basic_type::Character`].
+/// be any type defined in [`crate::simple::Character`].
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct NTString {
@@ -93,7 +93,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::basic_type::{Character, CharacterType, StrictASCII, IPv4};
+    use crate::simple::{Character, CharacterType, StrictASCII, IPv4};
     use crate::Alignment;
 
     #[test]

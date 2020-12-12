@@ -8,7 +8,7 @@ use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 
 /// Defines a pointer type - a numeric type that points to another location.
 ///
-/// This is defined very similarly to [`crate::basic_type::H2Number`], with one
+/// This is defined very similarly to [`crate::simple::H2Number`], with one
 /// additional field: the `target_type`, which is the type of the value that the
 /// pointer points to.
 #[derive(Debug, Clone)]
@@ -78,7 +78,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
 
-    use crate::basic_type::H2Number;
+    use crate::simple::H2Number;
 
     #[test]
     fn test_pointer() -> SimpleResult<()> {

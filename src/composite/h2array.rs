@@ -12,7 +12,7 @@ use crate::{Alignment, H2Type, H2Types, H2TypeTrait, Offset};
 /// dynamic (the size is calculated at runtime and can vary element-to-element).
 ///
 /// Arrays can be nested, can contain
-/// [`crate::complex_type::H2Struct`]s/[`crate::complex_type::H2Enum`]s, and can
+/// [`crate::composite::H2Struct`]s/[`crate::composite::H2Enum`]s, and can
 /// be as complex or simple as you need.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
@@ -68,7 +68,7 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::Context;
 
-    use crate::basic_type::{Character, CharacterType, StrictASCII};
+    use crate::simple::{Character, CharacterType, StrictASCII};
 
     #[test]
     fn test_array_type() -> SimpleResult<()> {

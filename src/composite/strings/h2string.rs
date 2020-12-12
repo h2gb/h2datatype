@@ -5,13 +5,13 @@ use simple_error::{bail, SimpleResult};
 use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
-use crate::complex_type::H2Array;
+use crate::composite::H2Array;
 
 /// Defines a string with a configured length.
 ///
 /// The length (in characters) is chosen when creating the type. The length in
 /// bytes may be longer if the character type is non-ASCII, however. See
-/// [`crate::basic_type::Character`] for a list of possible character types.
+/// [`crate::simple::Character`] for a list of possible character types.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct H2String {
@@ -94,7 +94,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::basic_type::{Character, CharacterType, StrictASCII, IPv4};
+    use crate::simple::{Character, CharacterType, StrictASCII, IPv4};
 
     #[test]
     fn test_utf8_lstring() -> SimpleResult<()> {

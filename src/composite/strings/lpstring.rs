@@ -5,14 +5,14 @@ use simple_error::{bail, SimpleResult};
 use std::iter::FromIterator;
 
 use crate::{H2Type, H2Types, H2TypeTrait, Offset, Alignment};
-use crate::complex_type::H2Array;
+use crate::composite::H2Array;
 
 /// Defines a length-prefixed string.
 ///
 /// This is a string with a numerical prefix that denotes the length of the
 /// string (in *characters*). The length is any numerical value as defined in
-/// [`crate::basic_type::H2Number`] (or other numeric types if we add any), and
-/// the character type is any type defined in [`crate::basic_type::Character`].
+/// [`crate::simple::H2Number`] (or other numeric types if we add any), and
+/// the character type is any type defined in [`crate::simple::Character`].
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct LPString {
@@ -102,7 +102,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
-    use crate::basic_type::{Character, CharacterType, StrictASCII, H2Number, IPv4};
+    use crate::simple::{Character, CharacterType, StrictASCII, H2Number, IPv4};
     use crate::Alignment;
 
     #[test]
