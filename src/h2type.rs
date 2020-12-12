@@ -7,7 +7,6 @@ use std::ops::Range;
 use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
 use crate::basic_type::*;
 use crate::complex_type::*;
-use crate::strings::*;
 
 /// An enum used to multiplex between the various types.
 ///

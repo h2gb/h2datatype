@@ -53,9 +53,9 @@ array and so on, for as long as you like.
 
 #### String types
 
-A string type, which are defined in `strings`, are a special complex
-type. They're really just arrays of a value that can become a character.
-A character can be ASCII, UTF-8, UTF-16, or UTF-32.
+A string type, which are defined in `crate::complex_type::strings`, are a
+special complex type. They're really just arrays of a value that can
+consume a character type in some way to become a String.
 
 ### Alignment
 
@@ -170,7 +170,6 @@ sized elements, like length-prefixed strings.
 use h2datatype::*;
 use h2datatype::basic_type::*;
 use h2datatype::complex_type::*;
-use h2datatype::strings::*;
 use sized_number::*;
 
 // This is our buffer - three strings with a one-byte length prefix
