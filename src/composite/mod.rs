@@ -12,5 +12,4 @@ pub use h2enum::*;
 mod h2struct;
 pub use h2struct::*;
 
-mod strings;
-pub use strings::*;
+pub mod string;

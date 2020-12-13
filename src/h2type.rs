@@ -8,6 +8,7 @@ use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
 use crate::simple::*;
 use crate::simple::character::*;
 use crate::composite::*;
+use crate::composite::string::*;
 
 /// An enum used to multiplex between the various types.
 ///

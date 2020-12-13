@@ -171,6 +171,7 @@ use h2datatype::*;
 use h2datatype::simple::*;
 use h2datatype::simple::character::*;
 use h2datatype::composite::*;
+use h2datatype::composite::string::*;
 use sized_number::*;
 
 // This is our buffer - three strings with a one-byte length prefix
