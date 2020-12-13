@@ -64,7 +64,8 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::simple::{H2Number, Character, CharacterType, StrictASCII, IPv4};
+    use crate::simple::{H2Number, IPv4};
+    use crate::simple::character::{ASCII, StrictASCII};
     use crate::composite::H2Array;
 
     #[test]
@@ -185,7 +186,7 @@ mod tests {
                         H2Array::new_aligned(
                             Alignment::Loose(8),
                             5,
-                            Character::new(CharacterType::ASCII(StrictASCII::Permissive)),
+                            ASCII::new(StrictASCII::Permissive),
                         )?,
                     )
                 ])?,

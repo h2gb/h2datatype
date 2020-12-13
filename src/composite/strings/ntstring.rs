@@ -93,7 +93,8 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::simple::{Character, CharacterType, StrictASCII, IPv4};
+    use crate::simple::IPv4;
+    use crate::simple::character::{UTF8, ASCII, StrictASCII};
     use crate::Alignment;
 
     #[test]
@@ -102,7 +103,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8))?;
+        let a = NTString::new(UTF8::new())?;
         assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
@@ -113,7 +114,7 @@ mod tests {
         let data = b"\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8))?;
+        let a = NTString::new(UTF8::new())?;
         assert_eq!("\"\"", a.to_display(offset)?);
 
         Ok(())
@@ -124,7 +125,7 @@ mod tests {
         let data = b"".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8))?;
+        let a = NTString::new(UTF8::new())?;
         assert!(a.to_display(offset).is_err());
 
         Ok(())
@@ -136,7 +137,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new(CharacterType::UTF8))?;
+        let a = NTString::new(UTF8::new())?;
         assert!(a.to_display(offset).is_err());
 
         Ok(())
@@ -150,7 +151,7 @@ mod tests {
         let data = b"\x41PP\x42PP\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9EPP\xF0\x9F\x98\x88PP\xc3\xb7P\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = NTString::new(Character::new_aligned(Alignment::Loose(3), CharacterType::UTF8))?;
+        let a = NTString::new(UTF8::new_aligned(Alignment::Loose(3)))?;
         assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
@@ -162,7 +163,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7\x00".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a: H2Type = NTString::new(Character::new(CharacterType::UTF8))?;
+        let a: H2Type = NTString::new(UTF8::new())?;
         let array = a.resolve(offset, None)?;
 
         // Should just have one child - the array
@@ -190,7 +191,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Array::new(3, NTString::new(
-          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+          ASCII::new(StrictASCII::Strict),
         )?)?;
 
         assert_eq!(12, t.actual_size(offset).unwrap());

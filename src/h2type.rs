@@ -6,6 +6,7 @@ use std::ops::Range;
 
 use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
 use crate::simple::*;
+use crate::simple::character::*;
 use crate::composite::*;
 
 /// An enum used to multiplex between the various types.
@@ -14,14 +15,20 @@ use crate::composite::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum H2Types {
+    // Simple
     H2Number(H2Number),
     H2Pointer(H2Pointer),
-    Character(Character),
 
     IPv4(IPv4),
     IPv6(IPv6),
 
-    // Complex
+    // Characters
+    ASCII(ASCII),
+    UTF8(UTF8),
+    UTF16(UTF16),
+    UTF32(UTF32),
+
+    // Composite
     H2Array(H2Array),
     H2Enum(H2Enum),
     H2Struct(H2Struct),
@@ -68,10 +75,15 @@ impl H2Type {
             // Simple
             H2Types::H2Number(t)  => t,
             H2Types::H2Pointer(t) => t,
-            H2Types::Character(t) => t,
 
             H2Types::IPv4(t)      => t,
             H2Types::IPv6(t)      => t,
+
+            // Characters
+            H2Types::ASCII(t) => t,
+            H2Types::UTF8(t)  => t,
+            H2Types::UTF16(t) => t,
+            H2Types::UTF32(t) => t,
 
             // Complex
             H2Types::H2Array(t)   => t,

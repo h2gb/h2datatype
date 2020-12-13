@@ -102,7 +102,8 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
-    use crate::simple::{Character, CharacterType, StrictASCII, H2Number, IPv4};
+    use crate::simple::{H2Number, IPv4};
+    use crate::simple::character::{UTF8, ASCII, StrictASCII};
     use crate::Alignment;
 
     #[test]
@@ -113,7 +114,7 @@ mod tests {
 
         let size_type = H2Number::new(SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
+        let a = LPString::new(size_type, UTF8::new())?;
         assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
@@ -125,7 +126,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
+        let a = LPString::new(size_type, UTF8::new())?;
         assert_eq!("\"\"", a.to_display(offset)?);
 
         Ok(())
@@ -137,7 +138,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
+        let a = LPString::new(size_type, UTF8::new())?;
         assert!(a.to_display(offset).is_err());
 
         Ok(())
@@ -150,7 +151,7 @@ mod tests {
 
         let size_type = H2Number::new_aligned(Alignment::Loose(8), SizedDefinition::U16(Endian::Big), SizedDisplay::Decimal);
 
-        let a = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
+        let a = LPString::new(size_type, UTF8::new())?;
         assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
@@ -163,7 +164,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let size_type = H2Number::new(SizedDefinition::U8, SizedDisplay::Decimal);
-        let a: H2Type = LPString::new(size_type, Character::new(CharacterType::UTF8))?;
+        let a: H2Type = LPString::new(size_type, UTF8::new())?;
         let array = a.resolve(offset, None)?;
 
         // Should just have two children - the length and the array
@@ -185,7 +186,7 @@ mod tests {
         assert!(LPString::new(size_type, IPv4::new(Endian::Big)).is_err());
 
         let size_type = IPv4::new(Endian::Big);
-        assert!(LPString::new(size_type, Character::new(CharacterType::UTF8)).is_err());
+        assert!(LPString::new(size_type, UTF8::new()).is_err());
 
         Ok(())
     }
@@ -197,7 +198,7 @@ mod tests {
 
         let t = H2Array::new(3, LPString::new(
           H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())),
-          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+          ASCII::new(StrictASCII::Strict),
         )?)?;
 
         assert_eq!(12, t.actual_size(offset)?);

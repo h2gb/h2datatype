@@ -15,5 +15,4 @@ pub use ipv4::*;
 mod ipv6;
 pub use ipv6::*;
 
-mod character;
-pub use character::*;
+pub mod character;

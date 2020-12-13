@@ -169,6 +169,7 @@ sized elements, like length-prefixed strings.
 ```rust
 use h2datatype::*;
 use h2datatype::simple::*;
+use h2datatype::simple::character::*;
 use h2datatype::composite::*;
 use sized_number::*;
 
@@ -185,7 +186,7 @@ let t = H2Array::new(3, LPString::new(
   H2Number::new(SizedDefinition::U8, SizedDisplay::Hex(Default::default())),
 
   // The character type is just simple ascii
-  Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+  ASCII::new(StrictASCII::Strict),
 ).unwrap()).unwrap();
 
 // The array takes up 12 bytes of memory, all-in

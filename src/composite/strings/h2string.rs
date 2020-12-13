@@ -94,7 +94,8 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::simple::{Character, CharacterType, StrictASCII, IPv4};
+    use crate::simple::IPv4;
+    use crate::simple::character::{UTF8, ASCII, StrictASCII};
 
     #[test]
     fn test_utf8_lstring() -> SimpleResult<()> {
@@ -102,7 +103,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = H2String::new(7, Character::new(CharacterType::UTF8))?;
+        let a = H2String::new(7, UTF8::new())?;
         assert_eq!("\"AB❄☢𝄞😈÷\"", a.to_display(offset)?);
 
         Ok(())
@@ -110,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_zero_length_utf8_lstring() -> SimpleResult<()> {
-        assert!(H2String::new(0, Character::new(CharacterType::UTF8)).is_err());
+        assert!(H2String::new(0, UTF8::new()).is_err());
 
         Ok(())
     }
@@ -120,7 +121,7 @@ mod tests {
         let data = b"A".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a = H2String::new(2, Character::new(CharacterType::UTF8))?;
+        let a = H2String::new(2, UTF8::new())?;
         assert!(a.to_display(offset).is_err());
 
         Ok(())
@@ -132,7 +133,7 @@ mod tests {
         let data = b"\x41\x42\xE2\x9D\x84\xE2\x98\xA2\xF0\x9D\x84\x9E\xF0\x9F\x98\x88\xc3\xb7".to_vec();
         let offset = Offset::Dynamic(Context::new(&data));
 
-        let a: H2Type = H2String::new(7, Character::new(CharacterType::UTF8))?;
+        let a: H2Type = H2String::new(7, UTF8::new())?;
         let array = a.resolve(offset, None)?;
 
         // Should just have one child - the array
@@ -148,7 +149,7 @@ mod tests {
     #[test]
     fn test_bad_type() -> SimpleResult<()> {
         assert!(H2String::new(1, IPv4::new(Endian::Big)).is_err());
-        assert!(H2String::new(0, Character::new(CharacterType::UTF8)).is_err());
+        assert!(H2String::new(0, UTF8::new()).is_err());
 
         Ok(())
     }
@@ -159,7 +160,7 @@ mod tests {
         let offset = Offset::Dynamic(Context::new(&data));
 
         let t = H2Array::new(4, H2String::new(4,
-          Character::new(CharacterType::ASCII(StrictASCII::Strict)),
+          ASCII::new(StrictASCII::Strict),
         )?)?;
 
         assert_eq!(16, t.actual_size(offset).unwrap());
