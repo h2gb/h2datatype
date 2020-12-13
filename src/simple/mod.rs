@@ -9,10 +9,5 @@ pub use h2number::*;
 mod h2pointer;
 pub use h2pointer::*;
 
-mod ipv4;
-pub use ipv4::*;
-
-mod ipv6;
-pub use ipv6::*;
-
 pub mod character;
+pub mod network;

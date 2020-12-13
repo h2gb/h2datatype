@@ -102,7 +102,8 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
-    use crate::simple::{H2Number, IPv4};
+    use crate::simple::H2Number;
+    use crate::simple::network::IPv4;
     use crate::simple::character::{UTF8, ASCII, StrictASCII};
     use crate::Alignment;
 

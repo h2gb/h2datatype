@@ -64,7 +64,8 @@ mod tests {
     use simple_error::SimpleResult;
     use sized_number::{Context, SizedDefinition, SizedDisplay, Endian};
 
-    use crate::simple::{H2Number, IPv4};
+    use crate::simple::H2Number;
+    use crate::simple::network::IPv4;
     use crate::simple::character::{ASCII, StrictASCII};
     use crate::composite::H2Array;
 

@@ -94,7 +94,7 @@ mod tests {
     use super::*;
     use simple_error::SimpleResult;
     use sized_number::{Context, Endian};
-    use crate::simple::IPv4;
+    use crate::simple::network::IPv4;
     use crate::simple::character::{UTF8, ASCII, StrictASCII};
 
     #[test]

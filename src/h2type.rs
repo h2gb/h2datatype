@@ -7,6 +7,7 @@ use std::ops::Range;
 use crate::{Alignment, H2TypeTrait, Offset, ResolvedType};
 use crate::simple::*;
 use crate::simple::character::*;
+use crate::simple::network::*;
 use crate::composite::*;
 use crate::composite::string::*;
 
