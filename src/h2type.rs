@@ -21,8 +21,11 @@ pub enum H2Types {
     H2Number(H2Number),
     H2Pointer(H2Pointer),
 
+    // Netework
     IPv4(IPv4),
     IPv6(IPv6),
+    MacAddress(MacAddress),
+    MacAddress8(MacAddress8),
 
     // Characters
     ASCII(ASCII),
@@ -78,8 +81,11 @@ impl H2Type {
             H2Types::H2Number(t)  => t,
             H2Types::H2Pointer(t) => t,
 
-            H2Types::IPv4(t)      => t,
-            H2Types::IPv6(t)      => t,
+            // Network
+            H2Types::IPv4(t)        => t,
+            H2Types::IPv6(t)        => t,
+            H2Types::MacAddress(t)  => t,
+            H2Types::MacAddress8(t) => t,
 
             // Characters
             H2Types::ASCII(t) => t,

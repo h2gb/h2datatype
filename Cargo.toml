@@ -8,7 +8,11 @@ edition = "2018"
 serialize = ["serde", "ron", "sized_number/serialize"]
 
 [dependencies]
+# Error handling
 simple-error = "~0.2.1"
+
+# Parse MAC addresses
+macaddr = "~1.0.1"
 
 # Disabled by default (controlled by serialize)
 serde = { version = "~1.0.110", optional = true }

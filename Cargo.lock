@@ -50,12 +50,19 @@ checksum = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
 name = "h2datatype"
 version = "0.1.0"
 dependencies = [
+ "macaddr",
  "pretty_assertions",
  "ron",
  "serde",
  "simple-error",
  "sized_number",
 ]
+
+[[package]]
+name = "macaddr"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baee0bbc17ce759db233beb01648088061bf678383130602a298e6998eedb2d8"
 
 [[package]]
 name = "output_vt100"
