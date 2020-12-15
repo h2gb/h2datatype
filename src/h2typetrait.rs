@@ -35,8 +35,8 @@ pub trait H2TypeTrait {
     ///
     /// By default, this will resolve the type's children and subtract the
     /// start of the first child from the end of the last. For types with
-    /// children that fully cover their range, this is a reasonable implementation,
-    /// but there may be more efficient ways.
+    /// children that fully cover their range, this is a reasonable
+    /// implementation, but there may be more efficient ways.
     ///
     /// Types without children - in general, [`crate::simple`]s - must also
     /// implement this. Without children, we can't tell.
