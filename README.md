@@ -1,3 +1,5 @@
+**NOTE: This library is deprecated, and has been rolled into libh2gb directly!**
+
 # h2datatype
 
 [![Crate](https://img.shields.io/crates/v/sized_number.svg)](https://crates.io/crates/sized_number)
